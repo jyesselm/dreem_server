@@ -1,0 +1,11 @@
+{% if not error %}
+{% for row in results.rows %}
+<tr>
+    <th scope="row">{{ loop.index }}</th>
+    <td>{{ row.name }}</td>
+    <td>{{ row.reads }}</td>
+    <td>{{ row.aligned }}</td>
+    <td>{{ row.sn }}</td>
+</tr>
+{% endfor %}
+{% endif %}

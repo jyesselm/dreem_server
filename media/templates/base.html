@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!--- <link rel="shortcut icon" type="image/png" href="/static/logo_eternabot.png"> -->
+    <title>DREEM Webserver{% block extratitle %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Cousine&display=swap" rel="stylesheet"> 
+    <style>
+        .required {
+            color: red;
+        }
+        .bg-eterna {
+            background-color: #132b44;
+        }
+        
+    </style>
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-eterna">
+        <a class="navbar-brand" href="/" style="display: flex; align-items: center;">
+            DREEM Webserver
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item {% if page == 'home' %}active{% endif %}">
+                    <a class="nav-link" href="/">Home {% if page == 'home' %}<span class="sr-only">(current)</span>{% endif %}</a>
+                </li>
+                <li class="nav-item {% if page == 'about' %}active{% endif %}">
+                    <a class="nav-link" href="/about">About {% if page == 'about' %}<span class="sr-only">(current)</span>{% endif %}</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div style="margin: 30px">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.9/js/all.js" integrity="sha384-8iPTk2s/jMVj81dnzb/iFR2sdA7u06vHJyyLlAd4snFpCl/SnyUjRrbdJsw1pGIl" crossorigin="anonymous"></script>
+    <script>
+        (function() {
+            $('.needs-validation').each(function() {
+                var $form = $(this);
+                
+                $form.on('submit', function(event) {
+                    $('.is-invalid').removeClass('is-invalid');
+
+                    if ($form.get(0).checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    $form.find(':invalid').each(function() {
+                        $(this).addClass('is-invalid');
+                        if (this.validationMessage) {
+                            $('.invalid-feedback[for=' + $(this).attr('name') + ']').html(this.validationMessage);
+                        }
+                    });
+                });
+            });
+        })();
+    </script>
+    {% block bodyend %}{% endblock %}
+</body>
+
+</html>

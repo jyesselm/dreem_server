@@ -1,0 +1,41 @@
+{% extends 'rule_cards/base_card.html' %}
+
+{% block title %}
+    Modified Berex Test
+{% endblock %}
+
+{% block author %}
+    Berex NZ
+{% endblock %}
+
+{% block description %}
+    Melting Point between 97 and 107<br>
+    Free Energy between –30 and –60<br>
+    G bases of 22%<br>
+    U bases of 13%<br>
+    C bases of 20%
+{% endblock %}
+
+{% block score %}
+    score\, =\, 100\\
+    score\, =\, score\, -\, abs((\text{number of Gs})/(\text{sequence length})\, -\, 0.22 [0.15])*100.00 [116.23]\\
+    score\, =\, score\, -\, abs((\text{number of Us})/(\text{sequence length})\, -\, 0.13 [0.07])*100.00 [129.23]\\
+    score\, =\, score\, -\, abs((\text{number of Cs})/(\text{sequence length})\, -\, 0.20 [0.19])*100.00 [117.62]\\
+    length\_weight\, =\, \frac{2.5}{\sqrt{2\Pi}}e^{\frac{-((\text{sequence length})\, -\, 100)^2}{5000}}\\
+    \text{if} (\text{free energy}) &lt; –60.00 [–68.34]\\
+        \qquad score\, =\, score\, -\, abs((\text{free energy})\, -\, –60.00 [–68.34])*1.00 [1.12]*length\_weight\\
+    \text{if} (\text{free energy}) &gt; –30.00 [–30.20]\\
+        \qquad score\, =\, score\, -\, abs((\text{free energy})\, -\, –30.00 [–30.20])*1.00 [1.12]*length\_weight\\
+    \text{if} (\text{melting point}) &lt; 33.4\\
+        \qquad score\, =\, score\, -\, abs((melting point)\, -\, 97.00 [35.47])*1.00 [1.36]*length\_weight\\
+    \text{if} (\text{melting point}) &gt; 107.00 [133.66]\\
+        \qquad score\, =\, score\, -\, abs((melting point)\, -\, 107.00 [133.66])*1.00 [1.36]*length\_weight\\
+{% endblock %}
+
+{% block weight %}
+    0.36
+{% endblock %}
+
+{% block proposal_link %}
+    https://getsatisfaction.com/eternagame/topics/_strategy_market_berex_test
+{% endblock %}

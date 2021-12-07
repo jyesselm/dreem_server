@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block extratitle %}{% if job.name %} - {{job.name}}{% endif %}{% endblock %}
+{% block head %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+{% if results.data|length == 0 %}
+<meta http-equiv="refresh" content="30">
+{% endif %}
+
+<style>
+    /* Via https://www.w3schools.com/howto/howto_css_loader.asp */
+    .spinner {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border: 3px solid #f3f3f3; /* Light grey */
+        border-top: 3px solid #3498db; /* Blue */
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock head %}
+
+{% block bodyend %}
+{% endblock bodyend %}
+
+{% block content %}
+
+<h2 style="text-overflow: ellipsis; overflow: hidden;" data-toggle="tooltip" data-placement="top" title="{{job.id}}">Job
+    {{job.id}}{% if job.name %} - {{job.name}}{% endif %}</h2>
+
+{% if results.data|length == 0 and not error %}
+<div class="card-footer" id="loading-message">
+    Running DREEM ...
+    <div class="spinner"></div>
+    Position in Queue: <span id="queue-position">{{queue_position}}</span>
+</div>
+{% endif %}
+
+
+{% if results.data|length != 0 and not error %}
+<div class="d-flex flex-wrap justify-content-end my-2">
+    <a id="downloadbtn" href="/resultdownload/{{job.id}}"
+       class="btn btn-primary my-1 {% if results.data|length == 0 or error %}disabled {% endif %}"
+       style="margin-left: 5px"
+    >
+        Download job results
+    </a>
+</div>
+<div class="card">
+    <table class="table table-responsive-sm" id="results" style="margin-bottom: 0;">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Reads</th>
+            <th scope="col">Aligned</th>
+            <th scope="col">Signal/Noise</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% include 'result_rows.html' %}
+        </tbody>
+    </table>
+    <div class="card-footer bg-danger text-white" id="error-message" {% if not error %}style="display: none;" {%endif%}>
+        An error has occurred while attempting to process your job. Please contact Joseph Yesselman (Jyesselm at unl dot
+        edu) with your job ID for further assistance.
+    </div>
+</div>
+{% for html_block in results.plotly_strs %}
+{{ html_block | safe }}
+{% endfor %}
+{% endif %}
+
+<div class="modal fade" id="image-modal" tabindex="-1" role="dialog" aria-labelledby="image-modal-label"
+     aria-hidden="true">`
+    <div class="modal-dialog modal-md modal-lg modal-xl" role="document" style="height: calc(100vh - 56px);">
+        <div class="modal-content" style="height: 100%;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="image-modal-label"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="height: calc(100% - 64px); text-align: center;"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,24 @@
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Title: {% block title %}{% endblock %}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">Author: {% block author %}{% endblock %}</h6>
+        <h6>Player Description</h6>
+        <blockquote class="blockquote" style="border-left: 5px solid #ddd; padding: 0.6rem 1rem;">
+            <p class="mb-0" style="position: relative; padding: 0 1.3rem;">
+                <span class="leftquote quotes">&ldquo;</span>
+                {% block description %}{% endblock %}
+                <span class="rightquote quotes">&bdquo;</span>
+            </p>
+        </blockquote>
+        <h6>Pseudocode</h6>
+        <p class="card-text" style="overflow-x: auto;">
+            \(
+                \begin{array}{l}
+                    {% block score %}{% endblock %}
+                \end{array}
+            \)
+        </p>
+        <p class="card-text">Weight: {% block weight %}{% endblock %}</p>
+        <a href="{% block proposal_link %}{% endblock %}" class="card-link">Original Proposal</a>
+    </div>
+</div>
