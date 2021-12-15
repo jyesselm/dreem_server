@@ -35,7 +35,7 @@ class Result(object):
             f.close()
             s = "".join(lines)
             spl = s.split('</script>')
-            keep_str = spl[2] + "</script>        </div>"
+            keep_str = spl[2] + "</script>"
             self.plotly_strs.append(keep_str)
 
 

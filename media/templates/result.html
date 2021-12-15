@@ -37,6 +37,8 @@
 
 <h2 style="text-overflow: ellipsis; overflow: hidden;" data-toggle="tooltip" data-placement="top" title="{{job.id}}">Job
     {{job.id}}{% if job.name %} - {{job.name}}{% endif %}</h2>
+<p> Job details:<br>
+fasta file: <a href="/resultdownload/{{job.id}}/fasta">{{job.args['fasta_name']}}</a></p>
 
 {% if results.data|length == 0 and not error %}
 <div class="card-footer" id="loading-message">

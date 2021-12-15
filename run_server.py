@@ -2,6 +2,7 @@ import os
 import argparse
 import threading
 import cherrypy
+import cherrypy.lib.static
 import json
 import time
 import csv
@@ -117,9 +118,17 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
             if not os.path.isfile(path + "summary.csv"):
                 raise ValueError("DREEM did not run properly")
             shutil.move(path, new_path)
+            # clean up other stuff not Used
+            try:
+                shutil.rmtree('input')
+                shutil.rmtree('output')
+                shutil.rmtree('log')
+            except:
+                pass
             data = {
                 'summary' : str(new_path) + "/BitVector_Files/summary.csv"
             }
+            data.update(args)
             self.result_db.add_result(j.id, j.type, json.dumps(data))
             self.job_queue.update_job_status(j.id, job_queue.JobStatus.FINISHED)
 
@@ -161,7 +170,10 @@ class App:
         args = {
             "fasta" : path + "/" + fasta_file.filename,
             "fastq1": path + "/" + fastq1_file.filename,
-            "fastq2": path + "/" + fastq2_file.filename
+            "fastq2": path + "/" + fastq2_file.filename,
+            "fasta_name" : fasta_file.filename,
+            "fastq1_name" : fastq1_file.filename,
+            "fastq2_name" : fastq2_file.filename
         }
 
         cherrypy.engine.publish('queue_job', job_id,
@@ -190,23 +202,17 @@ class App:
             return templates['result_rows']().render(results=res, job=job)
 
     @cherrypy.expose
-    def resultdownload(self, job_id):
+    def resultdownload(self, job_id, file_type):
         job = self.jobdb.get_job(job_id)
+
+        if file_type == "fasta":
+            return cherrypy.lib.static.serve_file(
+                    job.args['fasta'], "application/x-download",
+                    "attachment", os.path.basename(job.args['fasta']))
+
         if job.status != job_queue.JobStatus.ERROR:
             res = self.resdb.get_result(job_id)
 
-            csvfile = io.StringIO()
-            writer = csv.DictWriter(csvfile,
-                                    fieldnames=[*res.data[0].keys(), 'target_image_url', 'predicted_image_url'])
-            writer.writeheader()
-            for idx, row in enumerate(res.data):
-                writer.writerow({
-                    **row,
-                    'target_image_url'   : f'eternabot.org/static/solution-images/{job_id}-{idx + 1}.svg',
-                    'predicted_image_url': f'eternabot.org/static/solution-images/{job_id}-{idx + 1}-predicted.svg'
-                })
-
-            csvfile.seek(0)
             cherrypy.response.headers['Content-Disposition'] = f'attachment; filename="eternabot-{res.id}.csv"'
             return cherrypy.lib.file_generator(csvfile)
 
@@ -243,7 +249,9 @@ def start_server():
     cherrypy.config.update({
         "server.socket_host": socket_host,
         "server.socket_port": socket_port,
-        "server.thread_pool": 100
+        "server.thread_pool": 100,
+        "server.max_request_body_size": 0,
+        'server.socket_timeout': 60
     })
 
     cherrypy.quickstart(App(), '', config={
