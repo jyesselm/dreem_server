@@ -243,9 +243,6 @@ def start_server():
 
     JobRunner(cherrypy.engine).subscribe()
 
-    if server_state == "release":
-        cherrypy.process.plugins.DropPrivileges(cherrypy.engine, uid='eternabot', gid='eternabot').subscribe()
-
     cherrypy.config.update({
         "server.socket_host": socket_host,
         "server.socket_port": socket_port,
