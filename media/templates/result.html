@@ -38,7 +38,13 @@
 <h2 style="text-overflow: ellipsis; overflow: hidden;" data-toggle="tooltip" data-placement="top" title="{{job.id}}">Job
     {{job.id}}{% if job.name %} - {{job.name}}{% endif %}</h2>
 <p> Job details:<br>
-fasta file: <a href="/resultdownload/{{job.id}}/fasta">{{job.args['fasta_name']}}</a></p>
+    fasta file: <a href="/resultdownload/{{job.id}}/fasta">{{job.args['fasta_name']}}</a><br>
+    fastq1 file: <a href="/resultdownload/{{job.id}}/fastq1">{{job.args['fastq1_name']}}</a><br>
+    {% if results.fastq2 != '' %}
+        fastq2 file: <a href="/resultdownload/{{job.id}}/fastq2">{{job.args['fastq2_name']}}</a><br>
+    {% endif %}
+</p>
+
 
 {% if results.data|length == 0 and not error %}
 <div class="card-footer" id="loading-message">
@@ -51,7 +57,7 @@ fasta file: <a href="/resultdownload/{{job.id}}/fasta">{{job.args['fasta_name']}
 
 {% if results.data|length != 0 and not error %}
 <div class="d-flex flex-wrap justify-content-end my-2">
-    <a id="downloadbtn" href="/resultdownload/{{job.id}}"
+    <a id="downloadbtn" href="/resultdownload/{{job.id}}/zip"
        class="btn btn-primary my-1 {% if results.data|length == 0 or error %}disabled {% endif %}"
        style="margin-left: 5px"
     >

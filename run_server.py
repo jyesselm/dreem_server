@@ -5,11 +5,10 @@ import cherrypy
 import cherrypy.lib.static
 import json
 import time
-import csv
-import io
 import shutil
 from pathlib import Path
 from subprocess import CalledProcessError
+from zipfile import ZipFile
 
 import dreem.run
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -54,7 +53,7 @@ def get_default_dreem_args():
     args = {
         'fasta'                : '',
         'fastq1'               : '',
-        'fastq2'               : '',
+        'fastq2'               : None,
         'dot_bracket'          : None,
         'param_file'           : None,
         'overwrite'            : False,
@@ -99,6 +98,13 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
     def queue_job(self, job_id, job_type, args, email, name):
         self.job_queue.add_job(job_id, job_type, args, email, name)
 
+    def zip_results(self):
+        with ZipFile('results.zip', 'w') as zip_obj:
+            for folderName, subfolders, filenames in os.walk('output/BitVector_Files'):
+                for filename in filenames:
+                    filePath = os.path.join(folderName, filename)
+                    zip_obj.write(filePath, os.path.basename(filePath))
+
     def job_running_daemon(self):
         while True:
             if self.stopping.is_set():
@@ -111,32 +117,36 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
             args = get_default_dreem_args()
             args['fasta'] = j.args['fasta']
             args['fastq1'] = j.args['fastq1']
-            args['fastq2'] = j.args['fastq2']
+            if j.args['run_type'] == 'PAIRED':
+                args['fastq2'] = j.args['fastq2']
             new_path = Path(j.args['fasta']).parent
-            dreem.run.run(args)
-            path = FILE_DIR + "/output/BitVector_Files/"
-            if not os.path.isfile(path + "summary.csv"):
-                raise ValueError("DREEM did not run properly")
-            shutil.move(path, new_path)
-            # clean up other stuff not Used
+            try:
+                dreem.run.run(args)
+                path = FILE_DIR + "/output/BitVector_Files/"
+                if not os.path.isfile(path + "summary.csv"):
+                    raise ValueError("DREEM did not run properly")
+                self.zip_results()
+                shutil.move(path, new_path)
+                shutil.move(FILE_DIR + "/results.zip", new_path)
+                data = {
+                    'summary': str(new_path) + "/BitVector_Files/summary.csv"
+                }
+                data.update(args)
+                self.result_db.add_result(j.id, j.type, json.dumps(data))
+                self.job_queue.update_job_status(j.id, job_queue.JobStatus.FINISHED)
+            except Exception as e:
+                errstring = f'{e}'
+                if getattr(e, 'stderr', None) is not None:
+                    errstring += f'\n------------\nSTDOUT:\n{e.stderr}'
+                self.result_db.add_result(j.id, j.type, json.dumps(errstring))
+                self.job_queue.update_job_status(j.id, job_queue.JobStatus.ERROR)
+
             try:
                 shutil.rmtree('input')
                 shutil.rmtree('output')
                 shutil.rmtree('log')
             except:
                 pass
-            data = {
-                'summary' : str(new_path) + "/BitVector_Files/summary.csv"
-            }
-            data.update(args)
-            self.result_db.add_result(j.id, j.type, json.dumps(data))
-            self.job_queue.update_job_status(j.id, job_queue.JobStatus.FINISHED)
-
-            """errstring = f'{e}'
-            if getattr(e, 'stderr', None) is not None:
-                errstring += f'\n------------\nSTDOUT:\n{e.stderr}'
-            self.result_db.add_result(j.id, j.type, json.dumps(errstring))
-            self.job_queue.update_job_status(j.id, job_queue.JobStatus.ERROR)"""
 
             if j.email:
                 email_client.send_email(j.email, j.id, j.name)
@@ -159,26 +169,30 @@ class App:
 
     @cherrypy.expose
     def request(self, fasta_file, fastq1_file, fastq2_file, email=None, name=None):
-
         job_id = os.urandom(16).hex()
         path = os.path.join(MEDIA_DIR, 'static', 'job-data', job_id)
         os.mkdir(path)
         self.__write_file_to_static(path, fasta_file)
         self.__write_file_to_static(path, fastq1_file)
-        self.__write_file_to_static(path, fastq2_file)
-
         args = {
-            "fasta" : path + "/" + fasta_file.filename,
-            "fastq1": path + "/" + fastq1_file.filename,
-            "fastq2": path + "/" + fastq2_file.filename,
+            "fasta"      : path + "/" + fasta_file.filename,
+            "fastq1"     : path + "/" + fastq1_file.filename,
             "fasta_name" : fasta_file.filename,
-            "fastq1_name" : fastq1_file.filename,
-            "fastq2_name" : fastq2_file.filename
+            "fastq1_name": fastq1_file.filename,
         }
-
+        # did we get one or two fastq files
+        run_type = 'PAIRED'
+        if len(fastq2_file.filename) > 5:
+            self.__write_file_to_static(path, fastq2_file)
+            args['fastq2'] = path + "/" + fastq2_file.filename
+            args['fastq2_name'] = fastq2_file.filename
+        else:
+            run_type = 'SINGLE'
+            args['fastq2'] = ''
+            args['fastq2_name'] = ''
+        args['run_type'] = run_type
         cherrypy.engine.publish('queue_job', job_id,
                                 job_queue.JobType.ONED_ANALYSIS, json.dumps(args), email, name)
-
         raise cherrypy.HTTPRedirect('/result/' + job_id)
 
     @cherrypy.expose
@@ -210,11 +224,18 @@ class App:
                     job.args['fasta'], "application/x-download",
                     "attachment", os.path.basename(job.args['fasta']))
 
-        if job.status != job_queue.JobStatus.ERROR:
-            res = self.resdb.get_result(job_id)
+        elif file_type == 'fastq1':
+            return cherrypy.lib.static.serve_file(
+                    job.args['fastq1'], "application/x-download", "attachment")
 
-            cherrypy.response.headers['Content-Disposition'] = f'attachment; filename="eternabot-{res.id}.csv"'
-            return cherrypy.lib.file_generator(csvfile)
+        elif file_type == 'fastq2':
+            return cherrypy.lib.static.serve_file(
+                    job.args['fastq2'], "application/x-download", "attachment")
+
+        elif file_type == 'zip':
+            return cherrypy.lib.static.serve_file(
+                    f"{MEDIA_DIR}/static/job-data/{job.id}/results.zip", "application/x-download",
+                    "attachment")
 
     @cherrypy.expose
     def about(self):
@@ -244,11 +265,11 @@ def start_server():
     JobRunner(cherrypy.engine).subscribe()
 
     cherrypy.config.update({
-        "server.socket_host": socket_host,
-        "server.socket_port": socket_port,
-        "server.thread_pool": 100,
+        "server.socket_host"          : socket_host,
+        "server.socket_port"          : socket_port,
+        "server.thread_pool"          : 100,
         "server.max_request_body_size": 0,
-        'server.socket_timeout': 60
+        'server.socket_timeout'       : 60
     })
 
     cherrypy.quickstart(App(), '', config={

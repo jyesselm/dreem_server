@@ -53,7 +53,7 @@
                     <div class="input-group-btn">
                         <div class="fileUpload btn btn-success">
                             <span>Upload</span>
-                            <input name="fasta_file" type="file" class="form-control-file upload"/>
+                            <input name="fasta_file" type="file" class="form-control-file upload" required/>
                         </div>
                     </div>
                 </div>
@@ -298,6 +298,8 @@
     if (fasta_file[0].files.length === 0) {
       return;
     }
+    //var reader = new FileReader();
+
     //alert(fasta_file[0].files[0].size);
   });
 
