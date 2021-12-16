@@ -29,7 +29,7 @@
 <div class="jumbotron">
     <h1>Welcome to the DREEM webserver</h1>
     <p>
-        WHAT TO SAY HERE??
+        This server can produce chemical mapping profiles from raw sequecing results produced from DMS-MaPseq experiments.
     </p>
     <div style="text-align: center; margin-top: 25px;">
         <img class="d-none d-md-inline" src="/static/dreem_front_page.png" width="100%;">
@@ -39,9 +39,11 @@
 <div class="bd-example">
     <h2>Submit your DREEM job</h2>
     <p>
-        To limit how long it takes to run jobs, this webserver has a limit of XXX, please <a
-            href="https://simtk.org/projects/eternabot2">use a local copy of DREEM</a>.
-        Don't know where to start? <a role="button" id="fill-example" href="javascript:void(0);">Download example input</a>
+        This server accepts a FASTA-formatted file containing the sequences of target RNAs as well as FASTQ-formatted files containing
+        the raw sequencing reads from an illumina-based sequencer.
+        To limit how long it takes to run jobs, this webserver has a limit of 100 reference sequences with 100 Mb sequencing read
+        files, please <a href="https://github.com/jyesselm/dreem">use a local copy of DREEM</a>.
+        Don't know where to start? <a href="/download/example-input">Download example input</a>
     </p>
     <form id="submission" class="form-horizontal" method='post' action='/request' enctype="multipart/form-data">
         <div class="form-group row">
@@ -58,7 +60,7 @@
                     </div>
                 </div>
                 <small class="form-text text-muted">
-                    A fasta formated file that contains all reference sequences
+                    A fasta formated file that contains all reference sequences. <a href="#fasta_format">see examples</a>
                 </small>
             </div>
         </div>
@@ -84,7 +86,7 @@
             <label class="col-sm-2 col-form-label-lg">Fastq2 file</label>
             <div class="col-sm-8">
                 <div class="input-group">
-                    <input id="fastq2_file_field" class="form-control" placeholder="Choose File" disabled="disabled"
+                    <input id="fastq2_file_field" class="form-control" placeholder="Choose File (Optional)" disabled="disabled"
                            style="background-color : white">
                     <div class="input-group-btn">
                         <div class="fileUpload btn btn-success">
@@ -121,13 +123,22 @@
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
     <hr>
-    <h2>Frequently asked questions</h2>
-    <p>Answers for questions about formatting</p>
-    <h3>Fasta file format</h3>
-    <p>Fastas must formatted as below. With an '>' followed by name. Next line contains the DNA sequence (all Us should
-        be
-        Ts). See entire example bellow.
-        <a href="">Download this file</a>.</p>
+    <h2>Frequently asked questions (FAQ)</h2>
+    <p>Answers for the most command questions</p>
+    <h3 id="too-many-reads">The server says my FASTQ files are too large</h3>
+    <p>To avoid long waits we have set a limit on 100 Mb per FASTQ file. If you wish to test your data on the server
+        there are multiple ways to reduce the size of your file for testing purposes. The simplest is to use the 'head'
+        command which is builtin on all mac and linux computers. Open the terminal on your computer and navigate to the
+        directory with your FASTQ files.
+    </p>
+    <div class="container bg-light text-wrap" style="width: 1100px;word-wrap: break-word;">
+       head -n 400000 test_1.fastq > test_1_trimmed.fastq
+    </div><br>
+    <p>This will take the first hundred thousand reads and move them into a new file that you can upload</p>
+    <h3 id="fasta_format">What is the expected FASTA file format?</h3>
+    <p>FASTA format is a text-based format for representing DNA sequences. must formatted as below. With an '>' followed
+        by name. <b>There should be no spaces in-between '>' and the sequence name</b>. Next line contains the DNA sequence (all Us should
+        be Ts). See entire example below. <a href="/download/example-fasta-file">Download example FASTA file</a>.</p>
     <div class="container bg-light text-wrap" style="width: 1100px;word-wrap: break-word;">
         >p4-p6-m2seq<br>
         GGCCAAAACAACGGAATTGCGGGAAAGGGGTCAACAGCCGTTCAGTACCAAGTCTCAGGGGAAACTTTGAGATGGCCTTGCAAAGGGTATGGTAATAAGCTGACGGACATGGTCCTAACCACGCAGCCAAGTCCTAAGTCAACAGATCTTCTGTTGATATGGATGCAGTTCAAAACCAAACCAAAGAAACAACAACAACAAC
@@ -146,10 +157,23 @@
         .<br>
         .<br>
     </div>
-    <h3>Fastq file format</h3>
+    <h3 id="fastq_format">What is the expected FASTQ file format?</h3>
+    <p>FASTQ format is a text-based format for storing DNA sequences with corresponding quality scores. These quality
+        scores define how likely a given nucleotide is to be correctly read via sequencing. Below is an example of a properly
+        formatted FASTQ file. Each read contains 4 lines. (1) the name of the read, (2) the read sequence, (3) '+', and (4) the
+        read quality by nucleotide. <a href="/download/example-fastq-file">Download example FASTQ file</a>
+    </p>
+    <div class="container bg-light text-wrap" style="width: 1100px;word-wrap: break-word;">
+        @FS10000899:22:BPG61606-0731:1:1101:1200:1000 2:N:0:1<br>
+        GGAAGATCGAGTAGATCAAAGGACGTATGGCGGGCGGCCGAGACCCCGAACTACGAGGAACAGAGGAAACTCTACCCCTCGCGGGGTCGTTTGACGCCGCCCGCCTAAGCGT
+        CCAAAGAAACAACAACAACAACAGCCACCCAGGCAGATC<br>
+        +<br>
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br>
+    </div>
 
 
-</div>
+    </div>
 {% endblock content %}
 
 {% block bodyend %}

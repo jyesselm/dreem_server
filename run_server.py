@@ -215,6 +215,18 @@ class App:
         elif job.status == job_queue.JobStatus.FINISHED:
             return templates['result_rows']().render(results=res, job=job)
 
+
+    @cherrypy.expose
+    def download(self, type):
+        path = MEDIA_DIR + "/static/examples"
+        if type == 'example-input':
+            return cherrypy.lib.static.serve_file(
+                    f"{path}/example-input.zip", "application/x-download", "attachment")
+
+        if type == 'example-fasta-file':
+            return cherrypy.lib.static.serve_file(
+                    f"{path}/example-input/test.fasta", "application/x-download", "attachment")
+
     @cherrypy.expose
     def resultdownload(self, job_id, file_type):
         job = self.jobdb.get_job(job_id)
