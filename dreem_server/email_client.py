@@ -22,7 +22,7 @@ def send_email(user_email, job_id, job_name):
     DATA = dedent("""
     Dear %s,
 
-    Your Eternabot job %sis finished. You can the results at http://rnadreem/result/%s
+    Your DREEM job %sis finished. You can the results at http://rnadreem.org/result/%s
     """ % (user_email, ('"%s" ' % job_name) if job_name else '', job_id)).strip()
 
     EMAIL_TO = [user_email]

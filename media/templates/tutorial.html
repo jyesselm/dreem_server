@@ -1,6 +1,31 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<style>
+    input {
+        font-family: 'Cousine', monospace;
+    }
+
+    .fileUpload {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .fileUpload input.upload {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 0;
+        padding: 0;
+        font-size: 20px;
+        cursor: pointer;
+        opacity: 0;
+        filter: alpha(opacity=0);
+    }
+
+</style>
+
 <script>
   $(document).ready(function () {
     $(function () {
@@ -38,45 +63,6 @@
     });
   })
 
-  window.onload = function () {
-    var chart1 = new CanvasJS.Chart("NativeRecovery",
-      {
-        title: {
-          text: "Native Sequence Recovery"
-        },
-        axisY: {
-          title: "Native Recovery",
-          maximum: 1.00,
-          interlacedColor: "#F8F1E4",
-          tickLength: 10,
-          labelFontSize: 25,
-          interval: 0.25
-        },
-
-        axisX: {
-          title: "Residues"
-        },
-        data: [
-          {
-            type: "column",
-            dataPoints: [
-              {x: 10, y: 1.000, label: "C1 ", color: "Green"},
-              {x: 20, y: 0.200, label: "C2 ", color: "Green"},
-              {x: 30, y: 1.000, label: "U3 ", color: "Blue"},
-              {x: 40, y: 1.000, label: "U4 ", color: "Blue"},
-              {x: 50, y: 0.000, label: "C5 ", color: "Green"},
-              {x: 60, y: 1.000, label: "G6 ", color: "Red"},
-              {x: 70, y: 0.200, label: "G7 ", color: "Red"},
-              {x: 80, y: 1.000, label: "G8 ", color: "Red"},
-            ]
-          }
-        ]
-      });
-
-    chart1.render();
-    chart1 = {}
-  }
-
 </script>
 {% endblock %}
 
@@ -109,6 +95,111 @@
     <hr id="web_input" style="height:2px;color:#000000;background-color:#000000">
     <div class="page-header">
         <h2>Section <kbd>#1</kbd>: Website Input</h2>
+        <form id="submission" class="form-horizontal" method='post' action='/request' enctype="multipart/form-data">
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label-lg">Fasta file</label>
+                <div class="col-sm-8">
+                    <div class="input-group">
+                        <input id="fasta_file_field" class="form-control" placeholder="Choose File" disabled="disabled"
+                               style="background-color : white">
+                        <div class="input-group-btn">
+                            <div class="fileUpload btn btn-success">
+                                <span>Upload</span>
+                                <input name="fasta_file" type="file" class="form-control-file upload" disabled="disabled"/>
+                            </div>
+                        </div>
+                        <img style="position:absolute;display:block;right:-10%;top:0%;opacity:0.85;" src="/static/fg_question.png"
+                             height="40px" width="40px" data-toggle="popover" data-placement="right"
+                             title="upload local fasta file" data-content="An FASTA formated file containing all referenced files
+                             sequences with their corresponding names. See examples in the FAQ section"/>
+                    </div>
+                    <small class="form-text text-muted">
+                        A fasta formated file that contains all reference sequences. <a href="/index/#fasta_format">see
+                        examples</a>
+                    </small>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label-lg">Fastq1 file</label>
+                <div class="col-sm-8">
+                    <div class="input-group">
+                        <input id="fastq1_file_field" class="form-control" placeholder="Choose File" disabled="disabled"
+                               style="background-color : white">
+                        <div class="input-group-btn">
+                            <div class="fileUpload btn btn-success">
+                                <span>Upload</span>
+                                <input name="fastq1_file" type="file" class="form-control-file upload" disabled="disabled"/>
+                            </div>
+                        </div>
+                        <img style="position:absolute;display:block;right:-10%;top:0%;opacity:0.85;" src="/static/fg_question.png"
+                             height="40px" width="40px" data-toggle="popover" data-placement="right"
+                             title="upload local fastq file" data-content="Upload a local FASTQ formated file containing
+                         raw sequencing reads in the forward direction. i.e. containing your sequence in the 5' to 3'"/>
+                    </div>
+                    <small class="form-text text-muted">
+                        A fastq formatted file containing sequence reads in the forward direction <a
+                            href="/index#fastq_format">see example</a>
+                    </small>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label-lg">Fastq2 file</label>
+                <div class="col-sm-8">
+                    <div class="input-group">
+                        <input id="fastq2_file_field" class="form-control" placeholder="Choose File (Optional)"
+                               disabled="disabled"
+                               style="background-color : white">
+                        <div class="input-group-btn">
+                            <div class="fileUpload btn btn-success">
+                                <span>Upload</span>
+                                <input name="fastq2_file" type="file" class="form-control-file upload" disabled="disabled"/>
+                            </div>
+                        </div>
+                        <img style="position:absolute;display:block;right:-10%;top:0%;opacity:0.85;" src="/static/fg_question.png"
+                             height="40px" width="40px" data-toggle="popover" data-placement="right"
+                             title="upload local fastq file" data-content="This is optional although recommended. Upload
+                             a local FASTQ formated file containing raw sequencing reads in the reverse direction. i.e.
+                             containing the reverse complement of your target sequence"/>
+                    </div>
+                    <small class="form-text text-muted">
+                        A fastq formatted file containing sequence reads in the reverse direction
+                    </small>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label-lg">Job Name</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" name="name" placeholder="Optional">
+                    <div class="invalid-feedback" for="name"></div>
+                    <small class="form-text text-muted">
+                        Provide a name for your submission to help you more easily recognize it later
+                    </small>
+                    <img style="position:absolute;display:block;right:-7.5%;top:0%;opacity:0.85;" src="/static/fg_question.png"
+                         height="40px" width="40px" data-toggle="popover" data-placement="right"
+                         title="Name your job" data-content="To make it easier to remember the description of your job
+                         you can supply a name"/>
+
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label-lg">Email</label>
+                <div class="col-sm-8">
+                    <input type="email" class="form-control" name="email" placeholder="Optional">
+                    <div class="invalid-feedback" for="email"></div>
+                    <small class="form-text text-muted">
+                        Provide your email to get a notification once the job is complete
+                    </small>
+                    <img style="position:absolute;display:block;right:-10%;top:0%;opacity:0.85;" src="/static/fg_question.png"
+                         height="40px" width="40px" data-toggle="popover" data-placement="right"
+                         title="Supply your email" data-content="You can supply an email to be notified when your job
+                         completes"/>
+
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a class="btn btn-secondary" href="/result/demo" role="button">Example Results</a>
+
+        </form>
     </div>
 </div>
 {% endblock content %}
