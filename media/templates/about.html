@@ -13,10 +13,12 @@
         color: #132b44;
         font-size: 3em;
     }
+
     .leftquote {
         top: .5rem;
         left: -.25rem;
     }
+
     .rightquote {
         bottom: 1rem;
         right: -.25rem;
@@ -25,99 +27,49 @@
 {% endblock %}
 
 {% block content %}
-  <div style="padding-top:30px; padding-bottom:30px; padding-left:30px">
-    <h2>About EternaBot</h2>
+<div style="padding-top:30px; padding-bottom:30px; padding-left:30px">
+    <h2>About DMS MaP experiments</h2>
     <hr>
     <div style="padding-left:50px; padding-right:20px; padding-top:18px; line-height:18px;">
         <p>
-            EternaBot is a secondary structure algorithm created by players of <a href="https://eternagame.org" target="_blank">Eterna project.</a>
+            DMS has emerged as one of the pre-eminent choices for RNA structure determination.
+            DMS can be added to cells, tissues, or in vitro solution, and it rapidly and specifically
+            modifies solvent accessible adenines and cytosines at their Watson–Crick base-pairing
+            positions. In standard experimental conditions, an accessible nucleotide has ~2%
+            chance of reacting with DMS, which results in multiple DMS modifications per single RNA
+            molecule. The DMS modifications therefore report on the folding of each individual RNA
+            molecule.
         </p>
         <div style="text-align: center">
-            <img style="margin-bottom: 1rem; width: 100%; max-width: 500px;" src="/static/eterna_logo_reverse.png">
+            <img style="margin-bottom: 1rem; width: 100%; max-width: 500px;" src="/static/dms_image.png">
         </div>
         <p>
-            Eterna players have designed and experimentally tested over 700 sequences. Based the experimental results, they have proposed a set of rules for robust RNA design.
+            DMS mutational profiling with sequencing (DMS-MaPseq), encodes DMS modifications as mismatches that get
+            incorporated during reverse transcription by a thermostable group II intron reverse transcriptase (TGIRT).
+            Due to the high fidelity of TGITR, the background incorporation of mismatches is typically lower than
+            sequencing error. Thus, the observed rate of a mismatch at a given nucleotide is directly
+            proportional to its DMS reactivity. A big advantage of DMS-MaPseq is that any RNA of interest can be
+            targeted
+            for library generation and analyses using sequence specific primers.
         </p>
-        <p>
-            EternaBot is built to design a sequence based on those rules. It compiles each design rule as a scoring function. The bot then tries to create a sequence that maximizes the combination of the scoring functions.
-        </p>
-        <p>
-            Please contact Joseph Yesselman (jyesselm at unl dot edu) for technical support and bug reports.
-        </p>
+        <div style="text-align: center">
+            <img style="margin-bottom: 1rem; width: 100%; max-width: 500px;" src="/static/tigrt_image.png">
+        </div>
     </div>
-  </div>
-
-  <div style="padding-top:30px; padding-bottom:30px; padding-left:30px">
-    <h2>Player-designed rules used in Eternabot 2.0</h2>
-    <hr>
+    <h2>About the DREEM analysis</h2>
     <div style="padding-left:50px; padding-right:20px; padding-top:18px; line-height:18px;">
+        <hr>
         <p>
-            Rules were selected with Least Angle Regression.
-            Weights were determined by linear regression.
-            Description shows the original design rule statement by participants.
-            The scoring functions show the pseudocode of the scoring function coded from the corresponding design rule.
-            In the scoring functions, the "Number [Number]" notation represents an originally proposed parameter and an optimized
-            parameter respectively.
-            Optimization was done using the downhill simplex algorithm provided by scipy.optomize.fmin to minimize
-            the average squared error between the predicted and actual structure mapping for the training set).
+            The DREEM web tool provides a simple platform for analyzing DMS-reactivity of an RNA. The user input is a
+            raw sequencing file (.fastq) generated from a DMS-MaPseq experiment,  and a sequence of the RNA of interest
+            (.fasta). The DREEM algorithm performs sequence alignment using bowtie-2 and outputs the mismatch rate per
+            nucleotide.
         </p>
-        <div class="row">
-            <div class="col-xl-3">
-                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                <a class="nav-link active" id="v-pills-basic-tab" data-toggle="pill" href="#v-pills-basic" role="tab" aria-controls="v-pills-basic" aria-selected="true">A Basic Test</a>
-                <a class="nav-link" id="v-pills-berex-tab" data-toggle="pill" href="#v-pills-berex" role="tab" aria-controls="v-pills-berex" aria-selected="false">Berex Test</a>
-                <a class="nav-link" id="v-pills-gcdir-tab" data-toggle="pill" href="#v-pills-gcdir" role="tab" aria-controls="v-pills-gcdir" aria-selected="false">Direction of GC</a>
-                <a class="nav-link" id="v-pills-clearplot-tab" data-toggle="pill" href="#v-pills-clearplot" role="tab" aria-controls="v-pills-clearplot" aria-selected="false">Clear Plot</a>
-                <a class="nav-link" id="v-pills-numyellow-tab" data-toggle="pill" href="#v-pills-numyellow" role="tab" aria-controls="v-pills-numyellow" aria-selected="false">Number of Yellows</a>
-                </div>
-            </div>
-            <div class="col-xl-9">
-                <div class="tab-content" id="v-pills-tabContent">
-                <div class="tab-pane fade show active" id="v-pills-basic" role="tabpanel" aria-labelledby="v-pills-basic-tab">
-                    {% include 'rule_cards/basic_test.html' %}
-                </div>
-                <div class="tab-pane fade" id="v-pills-berex" role="tabpanel" aria-labelledby="v-pills-berex-tab">
-                    {% include 'rule_cards/berex.html' %}
-                </div>
-                <div class="tab-pane fade" id="v-pills-gcdir" role="tabpanel" aria-labelledby="v-pills-gcdir-tab">
-                    {% include 'rule_cards/gc_direction.html' %}
-                </div>
-                <div class="tab-pane fade" id="v-pills-clearplot" role="tabpanel" aria-labelledby="v-pills-clearplot-tab">
-                    {% include 'rule_cards/clear_plot.html' %}
-                </div>
-                <div class="tab-pane fade" id="v-pills-numyellow" role="tabpanel" aria-labelledby="v-pills-numyellow-tab">
-                    {% include 'rule_cards/num_yellow.html' %}
-                </div>
-                </div>
-            </div>
-        </div>
     </div>
-  </div>
+</div>
 
-  <div style="padding-top:30px; padding-bottom:30px; padding-left:30px">
-    <h2>Data deposition</h2>
-    <hr>
-    <div style="padding-left:50px; padding-right:20px; padding-top:18px; line-height:18px;">
-        <div style="padding-top:11px;">
-            All experimental data used to train EternaBot can be found <a href="https://eternagame.org/web/labs/past/" target="_blank">here</a> in Eterna Project.
-        </div>
-        <div style="padding-top:11px;">
-            A spread sheet of design rule scoring on the entire experimental data can be found <a href="/static/data.csv">here</a> in .csv format.
-        </div>
-    </div>
-  </div>
+
 {% endblock content %}
 
 {% block bodyend %}
-<script>
-    MathJax = {
-        tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']]
-        },
-    };
-</script>
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-<script id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-</script>
 {% endblock %}

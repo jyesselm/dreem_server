@@ -6,11 +6,11 @@ from textwrap import dedent
 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USERNAME = "eternabot.results@gmail.com"
-SMTP_PASSWORD = "p8SWe=ru*hAp5ADUdrow"
+SMTP_USERNAME = "rnadreem.results@gmail.com"
+SMTP_PASSWORD = "Ppq7Jf6M$&YN"
 
-EMAIL_FROM = "email@gmail.com"
-EMAIL_SUBJECT = "Eternabot Job Finished : "
+EMAIL_FROM = "rnadreem.results@gmail.com"
+EMAIL_SUBJECT = "DREEM Job Finished : "
 
 DATE_FORMAT = "%d/%m/%Y"
 EMAIL_SPACE = ", "
@@ -22,7 +22,7 @@ def send_email(user_email, job_id, job_name):
     DATA = dedent("""
     Dear %s,
 
-    Your Eternabot job %sis finished. You can the results at http://eternabot.org/result/%s
+    Your Eternabot job %sis finished. You can the results at http://rnadreem/result/%s
     """ % (user_email, ('"%s" ' % job_name) if job_name else '', job_id)).strip()
 
     EMAIL_TO = [user_email]
@@ -36,3 +36,10 @@ def send_email(user_email, job_id, job_name):
     mail.login(SMTP_USERNAME, SMTP_PASSWORD)
     mail.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
     mail.quit()
+
+def main():
+    #send_email('jyesselm@unl.edu', 'demo', 'demo')
+    pass
+
+if __name__ == "__main__":
+    main()

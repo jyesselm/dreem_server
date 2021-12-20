@@ -6,6 +6,7 @@ import cherrypy.lib.static
 import json
 import time
 import shutil
+import re
 from pathlib import Path
 from subprocess import CalledProcessError
 from zipfile import ZipFile
@@ -42,10 +43,10 @@ jenv = Environment(
 )
 
 templates = {
-    'index'      : lambda: jenv.get_template('index.html'),
-    'about'      : lambda: jenv.get_template('about.html'),
-    'result'     : lambda: jenv.get_template('result.html'),
-    'result_rows': lambda: jenv.get_template('result_rows.html')
+    'index'   : lambda: jenv.get_template('index.html'),
+    'about'   : lambda: jenv.get_template('about.html'),
+    'result'  : lambda: jenv.get_template('result.html'),
+    'tutorial': lambda: jenv.get_template('tutorial.html')
 }
 
 
@@ -105,6 +106,48 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                     filePath = os.path.join(folderName, filename)
                     zip_obj.write(filePath, os.path.basename(filePath))
 
+    def get_bowtie_results(self, bowtie_log_path):
+        f = open(bowtie_log_path)
+        lines = f.readlines()[6:]
+        f.close()
+        nums = []
+        for l in lines:
+            spl = l.rstrip().lstrip().split()
+            try:
+                nums.append(spl[0])
+            except:
+                pass
+        bowtie_results = {
+            'total_reads' : nums[0],
+            'paired_type_reads' : nums[1],
+            'not_aligned' : nums[2],
+            'aligned' : nums[3],
+            'mult_aligned' : nums[4],
+            'not_aligned_per' : round(float(nums[2]) / float(nums[0]) * 100, 2),
+            'aligned_per' : round(float(nums[3]) / float(nums[0]) * 100, 2),
+            'mult_aligned_per': round(float(nums[4]) / float(nums[0]) * 100, 2),
+        }
+        return bowtie_results
+
+    def check_fasta_format(self, fasta_path):
+        f = open(fasta_path)
+        lines = f.readlines()
+        f.close()
+        msg = None
+        for i, l in enumerate(lines):
+            l = l.rstrip().lstrip()
+            if i % 2 == 0:
+                if l[0] != '>':
+                    msg = "every other fasta line must start with '>' no space than reference name"
+                if l[1] == ' ':
+                    msg = "every other fasta line must start with '>' no space than reference name"
+            else:
+                if l.find("U") != -1:
+                    msg = "reference sequences must be DNA not RNA"
+                if re.search(r"[^AGCT]", l):
+                    msg = "reference sequences must contain AGCT or characters"
+        return msg
+
     def job_running_daemon(self):
         while True:
             if self.stopping.is_set():
@@ -121,6 +164,10 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                 args['fastq2'] = j.args['fastq2']
             new_path = Path(j.args['fasta']).parent
             try:
+                error_msg = self.check_fasta_format(args['fasta'])
+                self.plog(error_msg)
+                if error_msg is not None:
+                    raise ValueError(error_msg)
                 dreem.run.run(args)
                 path = FILE_DIR + "/output/BitVector_Files/"
                 if not os.path.isfile(path + "summary.csv"):
@@ -129,15 +176,20 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                 shutil.move(path, new_path)
                 shutil.move(FILE_DIR + "/results.zip", new_path)
                 data = {
-                    'summary': str(new_path) + "/BitVector_Files/summary.csv"
+                    'summary': str(new_path) + "/BitVector_Files/summary.csv",
+                    'bowtie' : self.get_bowtie_results(FILE_DIR + "/log/bowtie2 alignment.log")
                 }
                 data.update(args)
                 self.result_db.add_result(j.id, j.type, json.dumps(data))
                 self.job_queue.update_job_status(j.id, job_queue.JobStatus.FINISHED)
+                self.plog('finished job succesfully!')
             except Exception as e:
-                errstring = f'{e}'
-                if getattr(e, 'stderr', None) is not None:
-                    errstring += f'\n------------\nSTDOUT:\n{e.stderr}'
+                errstring = ''
+                for l in str(e).split('\n'):
+                    errstring += l.replace(MEDIA_DIR, '/datadir') + "<br>"
+                #if getattr(e, 'stderr', None) is not None:
+                #    errstring += f'\n------------\nSTDOUT:\n'
+
                 self.result_db.add_result(j.id, j.type, json.dumps(errstring))
                 self.job_queue.update_job_status(j.id, job_queue.JobStatus.ERROR)
 
@@ -153,15 +205,33 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
 
 
 class App:
-    def __init__(self):
+    def __init__(self, host_name):
         # We need to do this AFTER we drop privilages. Otherwise, we'll still be root
         # when connecting to the results DB, meaning if it doesn't exist yet,
         # the permissions will be set as owned by root, and we can't open it afterwords
         cherrypy.engine.subscribe('main', self.init_resdb)
+        self.host_name = host_name
+        # check to make sure there is a demo job!
 
     def init_resdb(self):
         self.resdb = results.ResultsDB()
         self.jobdb = job_queue.JobQueue()
+        new_dir = MEDIA_DIR + "/static/job-data/demo"
+        if not os.path.isdir(new_dir):
+            start_dir = MEDIA_DIR + "/static/examples/example-input"
+            shutil.copytree(start_dir, new_dir)
+            args = {
+                "run_type"   : "PAIRED",
+                "fasta"      : new_dir + "/test.fasta",
+                "fastq1"     : new_dir + "/test_mate1.fastq",
+                "fastq2"     : new_dir + "/test_mate2.fastq",
+                "fasta_name" : "test.fasta",
+                "fastq1_name": "test_mate1.fastq",
+                "fastq2_name": "test_mate2.fastq"
+            }
+            cherrypy.engine.publish('queue_job', 'demo',
+                                    job_queue.JobType.ONED_ANALYSIS, json.dumps(args),
+                                    None, None)
 
     @cherrypy.expose
     def index(self):
@@ -200,7 +270,7 @@ class App:
         job = self.jobdb.get_job(job_id)
         res = self.resdb.get_result(job_id)
         error = job.status == job_queue.JobStatus.ERROR
-        return templates['result']().render(results=res, job=job, error=error,
+        return templates['result']().render(results=res, job=job, error=error, host_name=self.host_name,
                                             queue_position=self.jobdb.get_queue_position(job_id))
 
     @cherrypy.expose
@@ -215,7 +285,6 @@ class App:
         elif job.status == job_queue.JobStatus.FINISHED:
             return templates['result_rows']().render(results=res, job=job)
 
-
     @cherrypy.expose
     def download(self, type):
         path = MEDIA_DIR + "/static/examples"
@@ -226,6 +295,10 @@ class App:
         if type == 'example-fasta-file':
             return cherrypy.lib.static.serve_file(
                     f"{path}/example-input/test.fasta", "application/x-download", "attachment")
+
+        if type == 'example-fastq-file':
+            return cherrypy.lib.static.serve_file(
+                    f"{path}/example-input/test_mate1.fastq", "application/x-download", "attachment")
 
     @cherrypy.expose
     def resultdownload(self, job_id, file_type):
@@ -253,6 +326,10 @@ class App:
     def about(self):
         return templates['about']().render(page='about')
 
+    @cherrypy.expose
+    def tutorial(self):
+        return templates['tutorial']().render(page='tutorial')
+
     def __write_file_to_static(self, path, file_obj):
         f_path = path + "/" + file_obj.filename
         with open(f_path, 'wb') as out:
@@ -270,25 +347,27 @@ def start_server():
     if server_state == "devel":
         socket_host = "127.0.0.1"
         socket_port = 8080
+        host_name = 'http://localhost:8080'
+
     else:
         socket_host = "0.0.0.0"
         socket_port = 80
+        host_name = 'http://dreemrna.org'
 
     JobRunner(cherrypy.engine).subscribe()
 
     cherrypy.config.update({
-        "server.socket_host"          : socket_host,
-        "server.socket_port"          : socket_port,
-        "server.thread_pool"          : 100,
-        "server.max_request_body_size": 0,
-        'server.socket_timeout'       : 60
+        "server.socket_host"   : socket_host,
+        "server.socket_port"   : socket_port,
+        "server.thread_pool"   : 100,
+        'server.socket_timeout': 60
     })
 
-    cherrypy.quickstart(App(), '', config={
+    cherrypy.quickstart(App(host_name), '', config={
         '/static': {
             'tools.staticdir.on' : True,
             'tools.staticdir.dir': os.path.join(MEDIA_DIR, 'static'),
-        },
+        }
     })
 
 

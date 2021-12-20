@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<script>
+  $(document).ready(function () {
+    $(function () {
+      $("[data-toggle='popover']").popover({trigger: "hover"});
+      $("[data-toggle='tooltip']").tooltip();
+    })
+
+    $('#up').on('click', function (e) {
+      e.preventDefault();
+      $('html, body').stop().animate({scrollTop: $('#down').offset().top}, 500);
+    });
+    $('#tab_1').on('click', function (e) {
+      e.preventDefault();
+      $('html, body').stop().animate({scrollTop: $('#web_input').offset().top}, 500);
+    });
+    $('#tab_2').on('click', function (e) {
+      e.preventDefault();
+      $('html, body').stop().animate({scrollTop: $('#web_output_primers').offset().top}, 500);
+    });
+    $('#tab_3').on('click', function (e) {
+      e.preventDefault();
+      $('html, body').stop().animate({scrollTop: $('#web_output_assembly').offset().top}, 500);
+    });
+    $('#tab_4').on('click', function (e) {
+      e.preventDefault();
+      $('html, body').stop().animate({scrollTop: $('#txt_output').offset().top}, 500);
+    });
+    $('#tab_5').on('click', function (e) {
+      e.preventDefault();
+      $('html, body').stop().animate({scrollTop: $('#idt_bulk').offset().top}, 500);
+    });
+    $('#tab_6').on('click', function (e) {
+      e.preventDefault();
+      $('html, body').stop().animate({scrollTop: $('#PCR').offset().top}, 500);
+    });
+  })
+
+  window.onload = function () {
+    var chart1 = new CanvasJS.Chart("NativeRecovery",
+      {
+        title: {
+          text: "Native Sequence Recovery"
+        },
+        axisY: {
+          title: "Native Recovery",
+          maximum: 1.00,
+          interlacedColor: "#F8F1E4",
+          tickLength: 10,
+          labelFontSize: 25,
+          interval: 0.25
+        },
+
+        axisX: {
+          title: "Residues"
+        },
+        data: [
+          {
+            type: "column",
+            dataPoints: [
+              {x: 10, y: 1.000, label: "C1 ", color: "Green"},
+              {x: 20, y: 0.200, label: "C2 ", color: "Green"},
+              {x: 30, y: 1.000, label: "U3 ", color: "Blue"},
+              {x: 40, y: 1.000, label: "U4 ", color: "Blue"},
+              {x: 50, y: 0.000, label: "C5 ", color: "Green"},
+              {x: 60, y: 1.000, label: "G6 ", color: "Red"},
+              {x: 70, y: 0.200, label: "G7 ", color: "Red"},
+              {x: 80, y: 1.000, label: "G8 ", color: "Red"},
+            ]
+          }
+        ]
+      });
+
+    chart1.render();
+    chart1 = {}
+  }
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="bd-example">
+    <!--- jumbotron --->
+    <div class="container theme-showcase" role="main">
+        <div class="jumbotron">
+            <div class="container">
+                <h1>DREEM Documentation</h1>
+                <p>This tutorial walks you through the basics of website interface, explains parameters and
+                    results, Hover mouse to the <img style="opacity:0.85;" src="/static/fg_question.png"
+                                                     height="40px" width="40px"> for detailed descriptions.
+                </p>
+                <br>
+            </div>
+        </div>
+    </div>
+    <hr id="learn_more">
+    <!--- list of sections --->
+    <div class="container theme-showcase" role="main">
+        <ul class="list-group">
+            <a id="tab_1" href="#web_input" class="list-group-item list-group-item-info"><h4>Section #1: Website
+                Input</h4></a>
+            <a id="tab_2" href="#web_output_primers" class="list-group-item list-group-item-primary active"><h4>
+                Section #2: Job Output</h4></a>
+        </ul>
+    </div>
+    <!--- web input --->
+    <hr id="web_input" style="height:2px;color:#000000;background-color:#000000">
+    <div class="page-header">
+        <h2>Section <kbd>#1</kbd>: Website Input</h2>
+    </div>
+</div>
+{% endblock content %}
+
+{% block bodyend %}
+{% endblock %}

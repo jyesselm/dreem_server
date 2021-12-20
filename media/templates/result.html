@@ -29,7 +29,6 @@
     }
 </style>
 {% endblock head %}
-
 {% block bodyend %}
 {% endblock bodyend %}
 
@@ -37,14 +36,18 @@
 
 <h2 style="text-overflow: ellipsis; overflow: hidden;" data-toggle="tooltip" data-placement="top" title="{{job.id}}">Job
     {{job.id}}{% if job.name %} - {{job.name}}{% endif %}</h2>
-<p> Job details:<br>
+<h5>
+    You can return this page at anytime with this static link:<br>
+    {{host_name}}/result/{{job.id}}
+</h5>
+<h5> Job details:<br>
     fasta file: <a href="/resultdownload/{{job.id}}/fasta">{{job.args['fasta_name']}}</a><br>
     fastq1 file: <a href="/resultdownload/{{job.id}}/fastq1">{{job.args['fastq1_name']}}</a><br>
     {% if results.fastq2 != '' %}
         fastq2 file: <a href="/resultdownload/{{job.id}}/fastq2">{{job.args['fastq2_name']}}</a><br>
     {% endif %}
-</p>
-
+</h5>
+<hr>
 
 {% if results.data|length == 0 and not error %}
 <div class="card-footer" id="loading-message">
@@ -54,8 +57,12 @@
 </div>
 {% endif %}
 
+{% if error %}
+<h3>Error: {{results.data | safe}}</h3>
+{% endif %}
 
 {% if results.data|length != 0 and not error %}
+
 <div class="d-flex flex-wrap justify-content-end my-2">
     <a id="downloadbtn" href="/resultdownload/{{job.id}}/zip"
        class="btn btn-primary my-1 {% if results.data|length == 0 or error %}disabled {% endif %}"
@@ -63,7 +70,46 @@
     >
         Download job results
     </a>
+</div>`
+<h3>Bowtie alignment</h3>
+<p>Bowtie assigns reads to reference sequences supplied in fasta file. High percentage of reads that aligned 0 times
+could be a sign of supplying the incorrect reference sequence. </p>
+<div class="card">
+    <table class="table table-responsive-sm" id="bowtie_results" style="margin-bottom: 0;">
+        <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Count</th>
+            <th scope="col">Percent</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td> Total reads</td>
+            <td> {{results.data['bowtie']['total_reads']}}</td>
+        </tr>
+        <tr>
+            <td> Reads aligned 0 times</td>
+            <td> {{results.data['bowtie']['not_aligned']}}</td>
+            <td> {{results.data['bowtie']['not_aligned_per']}}</td>
+        </tr>
+        <tr>
+            <td> Reads aligned exactly 1 time</td>
+            <td> {{results.data['bowtie']['aligned']}}</td>
+            <td> {{results.data['bowtie']['aligned_per']}}</td>
+        </tr>
+        <tr>
+            <td> Reads aligned >1 times</td>
+            <td> {{results.data['bowtie']['mult_aligned']}}</td>
+            <td> {{results.data['bowtie']['mult_aligned_per']}}</td>
+        </tr>
+        </tbody>
+    </table>
 </div>
+<br>
+<h3>DMS MaP analysis</h3>
+<p>Here is a break down of which reads were assigned to each reference sequence. Futhermore, each reference sequence will
+have a corresponding plot which breaks down the fraction of mutations per nucleotide.</p>
 <div class="card">
     <table class="table table-responsive-sm" id="results" style="margin-bottom: 0;">
         <thead>
