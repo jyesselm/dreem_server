@@ -108,15 +108,17 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
 
     def get_bowtie_results(self, bowtie_log_path):
         f = open(bowtie_log_path)
-        lines = f.readlines()[6:]
+        lines = f.readlines()
         f.close()
         nums = []
         for l in lines:
             spl = l.rstrip().lstrip().split()
             try:
-                nums.append(spl[0])
+                nums.append(int(spl[0]))
             except:
                 pass
+        if len(nums) < 5:
+            nums.extend([0]*(5-len(nums)))
         bowtie_results = {
             'total_reads' : nums[0],
             'paired_type_reads' : nums[1],
@@ -190,7 +192,7 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                 #if getattr(e, 'stderr', None) is not None:
                 #    errstring += f'\n------------\nSTDOUT:\n'
 
-                self.result_db.add_result(j.id, j.type, json.dumps(errstring))
+                self.result_db.add_result(j.id, j.type, json.dumps({'error' : errstring}))
                 self.job_queue.update_job_status(j.id, job_queue.JobStatus.ERROR)
 
             try:
@@ -352,7 +354,7 @@ def start_server():
     else:
         socket_host = "0.0.0.0"
         socket_port = 80
-        host_name = 'http://dreemrna.org'
+        host_name = 'http://rnadreem.org'
 
     JobRunner(cherrypy.engine).subscribe()
 

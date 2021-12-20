@@ -24,7 +24,8 @@ class Result(object):
         self.time = time
         self.num = num
         self.plotly_strs = []
-        if 'summary' is not self.data:
+        print(self.data)
+        if self.data.get('summary') is None:
             return
         path = Path(self.data['summary']).parent
         for i, row in pd.read_csv(self.data['summary']).iterrows():

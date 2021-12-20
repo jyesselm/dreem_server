@@ -58,7 +58,7 @@
 {% endif %}
 
 {% if error %}
-<h3>Error: {{results.data | safe}}</h3>
+<h3>Error: {{results.data['error'] | safe}}</h3>
 {% endif %}
 
 {% if results.data|length != 0 and not error %}
