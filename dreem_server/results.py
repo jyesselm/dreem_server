@@ -25,22 +25,22 @@ class Result(object):
         self.num = num
         self.plotly_strs = []
         print(self.data)
-        if self.data.get('summary') is None:
+        if self.data.get("summary") is None:
             return
-        path = Path(self.data['summary']).parent
-        for i, row in pd.read_csv(self.data['summary']).iterrows():
+        path = Path(self.data["summary"]).parent
+        for i, row in pd.read_csv(self.data["summary"]).iterrows():
             self.rows.append(
-                    self.__SummaryRow(row['name'], row['reads'], row['aligned'], row['sn']))
+                self.__SummaryRow(row["name"], row["reads"], row["aligned"], row["sn"])
+            )
         html_files = glob.glob(str(path) + "/*.html")
         for hf in html_files:
             f = open(hf)
             lines = f.readlines()
             f.close()
             s = "".join(lines)
-            spl = s.split('</script>')
+            spl = s.split("</script>")
             keep_str = spl[2] + "</script>"
             self.plotly_strs.append(keep_str)
-
 
     def type_str(self):
         str_type = "ONED_ANALYSIS"
@@ -51,8 +51,12 @@ class Result(object):
     def __str__(self):
         str_type = self.type_str()
 
-        s = "Result(id:%s, type:%s, submitted:%s, data:%s)" % \
-            (self.id, str_type, self.time, json.dumps(self.data))
+        s = "Result(id:%s, type:%s, submitted:%s, data:%s)" % (
+            self.id,
+            str_type,
+            self.time,
+            json.dumps(self.data),
+        )
 
         return s
 
@@ -62,7 +66,7 @@ class ResultType:
 
 
 class ResultsDB(object):
-    def __init__(self, db_name='results.db'):
+    def __init__(self, db_name="results.db"):
         self._setup_sqlite_connection(db_name)
         self.current_pos = self.get_last_num() + 1
 
@@ -70,8 +74,10 @@ class ResultsDB(object):
         self.connection = sqlite3.connect(db_name, check_same_thread=False)
 
         try:
-            self.connection.execute('CREATE TABLE results( id TEXT, type INT, \
-                                     data TEXT, time TEXT, num INT, PRIMARY KEY(id));')
+            self.connection.execute(
+                "CREATE TABLE results( id TEXT, type INT, \
+                                     data TEXT, time TEXT, num INT, PRIMARY KEY(id));"
+            )
         except:
             pass
 
@@ -80,8 +86,11 @@ class ResultsDB(object):
 
         time_str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         job = [job_id, int(job_type), data, time_str, num]
-        self.connection.execute('INSERT INTO results (id,type,data,time,num) \
-                                 VALUES(?,?,?,?,?)', job)
+        self.connection.execute(
+            "INSERT INTO results (id,type,data,time,num) \
+                                 VALUES(?,?,?,?,?)",
+            job,
+        )
         self.connection.commit()
         self.current_pos += 1
 
@@ -95,7 +104,9 @@ class ResultsDB(object):
 
     def get_result(self, nid):
         try:
-            r = self.connection.execute("SELECT * FROM results WHERE id=:Id", {"Id": nid}).fetchone()
+            r = self.connection.execute(
+                "SELECT * FROM results WHERE id=:Id", {"Id": nid}
+            ).fetchone()
         except:
             return None
 
@@ -106,21 +117,21 @@ class ResultsDB(object):
         return r_obj
 
     def get_last_num(self):
-        index = self.connection.execute('SELECT MAX(num) FROM results').fetchone()
+        index = self.connection.execute("SELECT MAX(num) FROM results").fetchone()
         if index[0] is None:
             return 0
         else:
             return int(index[0])
 
     def get_all(self):
-        jobs = self.connection.execute('SELECT * FROM results').fetchall()
+        jobs = self.connection.execute("SELECT * FROM results").fetchall()
         j_obs = []
         for j in jobs:
             j_obs.append(Result(*j))
         return j_obs
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
     # queue.add_job("c32af6417fb183e71c662232091ce548", JobType.SCAFFOLD, json.dumps(args))
     # print queue.get_queue_position("c32af6417fb183e71c662232091ce548")

@@ -15,31 +15,38 @@ EMAIL_SUBJECT = "DREEM Job Finished : "
 DATE_FORMAT = "%d/%m/%Y"
 EMAIL_SPACE = ", "
 
-DATA='This is the content of the email.'
+DATA = "This is the content of the email."
 
 
 def send_email(user_email, job_id, job_name):
-    DATA = dedent("""
+    DATA = dedent(
+        """
     Dear %s,
 
     Your DREEM job %sis finished. You can the results at http://rnadreem.org/result/%s
-    """ % (user_email, ('"%s" ' % job_name) if job_name else '', job_id)).strip()
+    """
+        % (user_email, ('"%s" ' % job_name) if job_name else "", job_id)
+    ).strip()
 
     EMAIL_TO = [user_email]
 
     msg = MIMEText(DATA)
-    msg['Subject'] = (EMAIL_SUBJECT + " %s %s" % (date.today().strftime(DATE_FORMAT), job_name)).strip()
-    msg['To'] = EMAIL_SPACE.join(EMAIL_TO)
-    msg['From'] = EMAIL_FROM
+    msg["Subject"] = (
+        EMAIL_SUBJECT + " %s %s" % (date.today().strftime(DATE_FORMAT), job_name)
+    ).strip()
+    msg["To"] = EMAIL_SPACE.join(EMAIL_TO)
+    msg["From"] = EMAIL_FROM
     mail = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
     mail.starttls()
     mail.login(SMTP_USERNAME, SMTP_PASSWORD)
     mail.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
     mail.quit()
 
+
 def main():
-    #send_email('jyesselm@unl.edu', 'demo', 'demo')
+    # send_email('jyesselm@unl.edu', 'demo', 'demo')
     pass
+
 
 if __name__ == "__main__":
     main()

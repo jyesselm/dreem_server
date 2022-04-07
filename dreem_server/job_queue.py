@@ -34,8 +34,13 @@ class Job(object):
         str_status = self.status_str()
         str_type = self.type_str()
 
-        s = "Job(id:%s, status:%s, type:%s, submitted:%s, args:%s)" % \
-            (self.id, str_status, str_type, self.time, json.dumps(self.args))
+        s = "Job(id:%s, status:%s, type:%s, submitted:%s, args:%s)" % (
+            self.id,
+            str_status,
+            str_type,
+            self.time,
+            json.dumps(self.args),
+        )
 
         return s
 
@@ -51,7 +56,7 @@ class JobType:
 
 
 class JobQueue(object):
-    def __init__(self, db_name='jobs.db'):
+    def __init__(self, db_name="jobs.db"):
         self._setup_sqlite_connection(db_name)
         self.current_pos = self.get_last_num() + 1
 
@@ -59,20 +64,26 @@ class JobQueue(object):
         self.connection = sqlite3.connect(db_name, check_same_thread=False)
 
         try:
-            self.connection.execute('CREATE TABLE jobs( id TEXT, status INT, \
+            self.connection.execute(
+                "CREATE TABLE jobs( id TEXT, status INT, \
                                      type INT, args TEXT, email TEXT, time TEXT, \
-                                     num INT, name TEXT, PRIMARY KEY(id));')
+                                     num INT, name TEXT, PRIMARY KEY(id));"
+            )
         except:
             pass
 
-    def add_job(self, job_id, job_type, args, email='', name='',
-                job_status=JobStatus.QUEUED):
+    def add_job(
+        self, job_id, job_type, args, email="", name="", job_status=JobStatus.QUEUED
+    ):
         num = self.get_last_num() + 1
 
         time_str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         job = [job_id, int(job_status), int(job_type), args, email, time_str, num, name]
-        self.connection.execute('INSERT INTO jobs (id,status,type,args,email,time,num,name) \
-                                 VALUES(?,?,?,?,?,?,?,?)', job)
+        self.connection.execute(
+            "INSERT INTO jobs (id,status,type,args,email,time,num,name) \
+                                 VALUES(?,?,?,?,?,?,?,?)",
+            job,
+        )
         self.connection.commit()
         self.current_pos += 1
 
@@ -86,7 +97,9 @@ class JobQueue(object):
 
     def get_job(self, nid):
         try:
-            r = self.connection.execute("SELECT * FROM jobs WHERE id=:Id", {"Id": nid}).fetchone()
+            r = self.connection.execute(
+                "SELECT * FROM jobs WHERE id=:Id", {"Id": nid}
+            ).fetchone()
         except:
             return None
 
@@ -97,24 +110,29 @@ class JobQueue(object):
         return r_obj
 
     def get_last_num(self):
-        index = self.connection.execute('SELECT MAX(num) FROM jobs').fetchone()
+        index = self.connection.execute("SELECT MAX(num) FROM jobs").fetchone()
         if index[0] is None:
             return 0
         else:
             return int(index[0])
 
     def get_next_queued_job(self):
-        index = self.connection.execute('SELECT MIN(num) FROM jobs WHERE status=0').fetchone()
+        index = self.connection.execute(
+            "SELECT MIN(num) FROM jobs WHERE status=0"
+        ).fetchone()
         if index[0] is None:
             return None
         else:
-            r = self.connection.execute('SELECT * FROM jobs WHERE num = ' + str(index[0])).fetchone()
+            r = self.connection.execute(
+                "SELECT * FROM jobs WHERE num = " + str(index[0])
+            ).fetchone()
             return Job(*r)
 
     def get_queue_position(self, id):
-        return \
-        self.connection.execute('SELECT COUNT(*) FROM jobs WHERE status=0 AND num < (SELECT num FROM jobs WHERE id=?)',
-                                (id,)).fetchone()[0]
+        return self.connection.execute(
+            "SELECT COUNT(*) FROM jobs WHERE status=0 AND num < (SELECT num FROM jobs WHERE id=?)",
+            (id,),
+        ).fetchone()[0]
 
     def has_queued_jobs(self):
         c = len(self.connection.execute("SELECT * FROM jobs WHERE status=0").fetchall())
@@ -124,25 +142,27 @@ class JobQueue(object):
             return False
 
     def update_job_status(self, id, status):
-        self.connection.execute('''UPDATE jobs SET status = ? WHERE id = ?''', (int(status), id))
+        self.connection.execute(
+            """UPDATE jobs SET status = ? WHERE id = ?""", (int(status), id)
+        )
         self.connection.commit()
 
     def get_queued(self):
-        jobs = self.connection.execute('SELECT * FROM jobs WHERE status=0').fetchall()
+        jobs = self.connection.execute("SELECT * FROM jobs WHERE status=0").fetchall()
         j_obs = []
         for j in jobs:
             j_obs.append(Job(*j))
         return j_obs
 
     def get_all(self):
-        jobs = self.connection.execute('SELECT * FROM jobs').fetchall()
+        jobs = self.connection.execute("SELECT * FROM jobs").fetchall()
         j_obs = []
         for j in jobs:
             j_obs.append(Job(*j))
         return j_obs
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     queue = JobQueue()
     print(queue.has_queued_jobs())
     # queue.add_job("c32af6417fb183e71c662232091ce548", JobType.SCAFFOLD, json.dumps(args))
