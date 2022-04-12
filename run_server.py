@@ -22,6 +22,8 @@ mimetypes.types_map[".svg"] = "image/svg+xml"
 
 from dreem_server import job_queue, results, email_client
 
+class DREEMInputException(Exception):
+    pass
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -110,10 +112,22 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
 
     def zip_results(self):
         with ZipFile("results.zip", "w") as zip_obj:
+            zip_obj.write(MEDIA_DIR + "/static/RESULTS_README.md", "results/README.md")
             for folderName, subfolders, filenames in os.walk("output/BitVector_Files"):
                 for filename in filenames:
                     filePath = os.path.join(folderName, filename)
-                    zip_obj.write(filePath, os.path.basename(filePath))
+                    zip_obj.write(filePath, "results/BitVectors_Files/" + filename)
+            for folderName, subfolders, filenames in os.walk("output/Mapping_Files"):
+                for filename in filenames:
+                    if filename == 'fastqc_report.html':
+                        continue
+                    if filename.find("fastqc") != -1 and filename.find(".html") != -1:
+                        filePath = os.path.join(folderName, filename)
+                        zip_obj.write(filePath, "results/Mapping_Files/" + filename)
+                    elif filename.find("trimming_report") != -1:
+                        filePath = os.path.join(folderName, filename)
+                        zip_obj.write(filePath, "results/Mapping_Files/" + filename)
+
 
     def get_bowtie_results(self, bowtie_log_path):
         f = open(bowtie_log_path)
@@ -144,20 +158,37 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
         f = open(fasta_path)
         lines = f.readlines()
         f.close()
-        msg = None
+        num = 0
         for i, l in enumerate(lines):
-            l = l.rstrip().lstrip()
+            l = l.rstrip()
+            if len(l) == 0:
+                raise DREEMInputException(
+                        f"blank line found on ln: {i}. These are not allowed in fastas."
+                )
+            # should be a reference sequence declartion
             if i % 2 == 0:
-                if l[0] != ">":
-                    msg = "every other fasta line must start with '>' no space than reference name"
-                if l[1] == " ":
-                    msg = "every other fasta line must start with '>' no space than reference name"
-            else:
-                if l.find("U") != -1:
-                    msg = "reference sequences must be DNA not RNA"
+                num += 1
+                if not l.startswith(">"):
+                    raise DREEMInputException(
+                            f"reference sequence names are on line zero and even numbers."
+                            f" line {i} has value which is not correct format in the fasta"
+                    )
+                if l.startswith("> "):
+                    raise DREEMInputException(
+                            f"there should be no spaces between > and reference name."
+                            f"this occured on ln: {i} in the fasta file"
+                    )
+            elif i % 2 == 1:
+                if l.startswith(">"):
+                    raise DREEMInputException(
+                            f"sequences should be on are on odd line numbers."
+                            f" line {i} has value which is not correct format in fasta file"
+                    )
                 if re.search(r"[^AGCT]", l):
-                    msg = "reference sequences must contain AGCT or characters"
-        return msg
+                    raise DREEMInputException(
+                            f"reference sequences must contain only AGCT characters."
+                            f" line {i} is not consisetnt with this in fasta"
+                    )
 
     def job_running_daemon(self):
         while True:
@@ -182,10 +213,7 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                 args["fastq2"] = j.args["fastq2"]
             new_path = Path(j.args["fasta"]).parent
             try:
-                error_msg = self.check_fasta_format(args["fasta"])
-                self.plog(error_msg)
-                if error_msg is not None:
-                    raise ValueError(error_msg)
+                self.check_fasta_format(args["fasta"])
                 dreem.run.run(args)
                 path = FILE_DIR + "/output/BitVector_Files/"
                 if not os.path.isfile(path + "summary.csv"):
