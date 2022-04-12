@@ -44,8 +44,9 @@
     <p>
         This server accepts a FASTA-formatted file containing the sequences of target RNAs as well as FASTQ-formatted files containing
         the raw sequencing reads from an illumina-based sequencer.
-        To limit how long it takes to run jobs, this webserver has a limit of 100 reference sequences with 100 Mb sequencing read
-        files, please <a href="https://github.com/jyesselm/dreem">use a local copy of DREEM</a>.
+        To limit how long it takes to run jobs, this webserver has a limit of 1000 reference sequences. We recommend ziping your fastq
+        files if they are larger 50 Mb. If dealing with very large fastq files please consider <a href="https://github.com/jyesselm/dreem">
+        using a local copy of DREEM</a>.
         Don't know where to start? <a href="/download/example-input">Download example input</a>
     </p>
     <form id="submission" class="form-horizontal" method='post' action='/request' enctype="multipart/form-data">
@@ -81,7 +82,7 @@
                     </div>
                 </div>
                 <small class="form-text text-muted">
-                    A fastq formatted file containing sequence reads in the forward direction <a href="#fastq_format">see example</a>
+                    A fastq formatted file containing sequence reads in the forward direction. Can be zip compressed. <a href="#fastq_format">see example</a>
                 </small>
             </div>
         </div>
@@ -130,16 +131,9 @@
     <hr>
     <h2>Frequently asked questions (FAQ)</h2>
     <p>Answers for the most common questions</p>
-    <h3 id="too-many-reads">The server says my FASTQ files are too large</h3>
-    <p>To avoid long waits we have set a limit on 100 Mb per FASTQ file. If you wish to test your data on the server
-        there are multiple ways to reduce the size of your file for testing purposes. The simplest is to use the 'head'
-        command which is builtin on all mac and linux computers. Open the terminal on your computer and navigate to the
-        directory with your FASTQ files.
+    <h3 id="too-many-reads">Upload is taking a very long time</h3>
+    <p>This webserver can accept zipped FASTQ files. Consider zip compressing your files before submitting them to reduce upload time.
     </p>
-    <div class="container bg-light text-wrap" style="width: 1100px;word-wrap: break-word;">
-       head -n 400000 test_1.fastq > test_1_trimmed.fastq
-    </div><br>
-    <p>This will take the first hundred thousand reads and move them into a new file that you can upload</p>
     <h3 id="fasta_format">What is the expected FASTA file format?</h3>
     <p>FASTA format is a text-based format for representing DNA sequences. must formatted as below. With an '>' followed
         by name. <b>There should be no spaces in-between '>' and the sequence name</b>. Next line contains the DNA sequence (all Us should

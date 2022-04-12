@@ -78,8 +78,8 @@ def get_default_dreem_args():
         "map_score_cutoff": None,
         "mutation_count_cutoff": None,
         "percent_length_cutoff": None,
-        "summary_output_only" : False,
-        "plot_sequence" : False
+        "summary_output_only": False,
+        "plot_sequence": False,
     }
     return args
 
@@ -443,7 +443,8 @@ def start_server():
             "server.socket_host": socket_host,
             "server.socket_port": socket_port,
             "server.thread_pool": 100,
-            "server.socket_timeout": 60,
+            "server.socket_timeout": 999,
+            "server.max_request_body_size": 0,
         }
     )
 

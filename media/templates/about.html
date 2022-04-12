@@ -63,8 +63,56 @@
             The DREEM web tool provides a simple platform for analyzing DMS-reactivity of an RNA. The user input is a
             raw sequencing file (.fastq) generated from a DMS-MaPseq experiment,  and a sequence of the RNA of interest
             (.fasta). The DREEM algorithm performs sequence alignment using bowtie-2 and outputs the mismatch rate per
-            nucleotide.
+            nucleotide.<br><br>
+
+            Here we give a brief explanation for what is being done under the hood. The code is freely available and can
+            be downloaded <a href="https://github.com/jyesselm/dreem">here</a>Each run generates three directories:
+            <code>input</code>, <code>output</code>, and <code>log</code><br><br>
+
+            <h5>FastQC</h5>
+            First <a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FastQC</a> is run. FastQC generates
+            a substantial breakdown of the quality of the supplied fastq files. <br><br>
+            <code>fastqc --extract fq1 fq2 --outdir=output/Mapping_Files/</code><br><br>
+
+            Here we run fastqc at command line where <code>fq1</code> and <code>fq2</code> are the two supplied fastq files.
+            If only one is supplied the we leave out the <code>fq2</code> argument. It is recommended to supply both the
+            forward and reverse reads if available as they give additional confidence to nucleotide identity.<br><br>
+
+            fastqc generates an html file for each supplied fastq file see the below image<br><br>
         </p>
+        <div style="text-align: center">
+            <img style="margin-bottom: 1rem; width: 100%; max-width: 500px;" src="/static/fastqc_example.png">
+        </div>
+        <p>
+            <h5>Trim Galore!</h5>
+            <a href="https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/">Trim Galore</a> is a wrapper script
+            to trim the sequence adapter which is first 13 bp of Illumina standard adapters ('AGATCGGAAGAGC'). We use it
+            to remove the adapter sequence to avoid bad aligns to the standard adapter.<br><br>
+            <code>trim_galore --fastqc --paired fq1 fq2 -o output/Mapping_Files/</code><br><br>
+            Here we run Trim Galore at command line where <code>fq1</code> and <code>fq2</code> are the two supplied
+            fastq files.<br><br>
+
+            <h5>Bowtie2</h5>
+            <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a> is a sequencer aligner. It is used
+            to align each illumina sequencing read to the target reference sequences supplied in the fasta file.<br><br>
+            There are two discrete steps required to run bowtie2. First using <code>bowtie2-build</code>, bowtie2 will create
+            an index of each reference sequence in the supplied fasta file. This is required for aligning. The below command
+            puts these index file in the input/ directory<br><br>
+            <code>bowtie2-build test.fasta input/test</code><br><br>
+            Next we run the bowtie2 alignment command. Bowtie2 has a ton of options and these are the ones that give us the
+            best results.<br><br>
+            <code>bowtie2 --local --no-unal --no-discordant --no-mixed -X 1000 -L 12 -x input/test -1 fq1 -2 fq2 -S output/Mapping_Files/aligned.sam</code><br><br>
+            <code>--local</code> runs bowtie2 in local mode which allows for a read to match to part of a reference sequence.<br>
+            <code>--no-unal</code> disallows reads that do not align to any of the reference sequences to be included in the
+            final sequence and alignment file (SAM).<br>
+            <code>--no-discordant</code> removes reads that do not cordantly align.
+            Here is a <a href="http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#concordant-pairs-match-pair-expectations-discordant-pairs-dont">
+            full definition of concordant pairs.</a><br>
+            <code>--no-mixed</code> removes combination of reads if no cordant alignments are possible.<br>
+            <code>-X 1000</code> allows for gaps between reads<br>
+            <code>-L 12</code> use a length of 12 nt sequence for seeding.<br>
+        </p>
+
     </div>
     <h2>Who to contact</h2>
     <hr>

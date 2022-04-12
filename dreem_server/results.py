@@ -28,12 +28,22 @@ class Result(object):
         if self.data.get("summary") is None:
             return
         path = Path(self.data["summary"]).parent
-        for i, row in pd.read_csv(self.data["summary"]).iterrows():
+        df = pd.read_csv(self.data["summary"])
+        df['score'] = df['reads']*df['aligned']
+        df = df.sort_values("score", ascending=False)
+        if len(df) > 50:
+            df = df[:50]
+        seen = []
+        for i, row in df.iterrows():
+            seen.append(row["name"])
             self.rows.append(
                 self.__SummaryRow(row["name"], row["reads"], row["aligned"], row["sn"])
             )
         html_files = glob.glob(str(path) + "/*.html")
         for hf in html_files:
+            name = "_".join(Path(hf).stem.split("_")[0:-4])
+            if name not in seen:
+                continue
             f = open(hf)
             lines = f.readlines()
             f.close()
