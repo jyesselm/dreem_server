@@ -2,6 +2,9 @@ import os
 import argparse
 import threading
 import zipfile
+import pickle
+from statistics import median as med
+import numpy as np
 
 import cherrypy
 import cherrypy.lib.static
@@ -22,8 +25,10 @@ mimetypes.types_map[".svg"] = "image/svg+xml"
 
 from dreem_server import job_queue, results, email_client
 
+
 class DREEMInputException(Exception):
     pass
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -119,7 +124,7 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                     zip_obj.write(filePath, "results/BitVectors_Files/" + filename)
             for folderName, subfolders, filenames in os.walk("output/Mapping_Files"):
                 for filename in filenames:
-                    if filename == 'fastqc_report.html':
+                    if filename == "fastqc_report.html":
                         continue
                     if filename.find("fastqc") != -1 and filename.find(".html") != -1:
                         filePath = os.path.join(folderName, filename)
@@ -127,7 +132,6 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                     elif filename.find("trimming_report") != -1:
                         filePath = os.path.join(folderName, filename)
                         zip_obj.write(filePath, "results/Mapping_Files/" + filename)
-
 
     def get_bowtie_results(self, bowtie_log_path):
         f = open(bowtie_log_path)
@@ -163,32 +167,63 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
             l = l.rstrip()
             if len(l) == 0:
                 raise DREEMInputException(
-                        f"blank line found on ln: {i}. These are not allowed in fastas."
+                    f"blank line found on ln: {i}. These are not allowed in fastas."
                 )
             # should be a reference sequence declartion
             if i % 2 == 0:
                 num += 1
                 if not l.startswith(">"):
                     raise DREEMInputException(
-                            f"reference sequence names are on line zero and even numbers."
-                            f" line {i} has value which is not correct format in the fasta"
+                        f"reference sequence names are on line zero and even numbers."
+                        f" line {i} has value which is not correct format in the fasta"
                     )
                 if l.startswith("> "):
                     raise DREEMInputException(
-                            f"there should be no spaces between > and reference name."
-                            f"this occured on ln: {i} in the fasta file"
+                        f"there should be no spaces between > and reference name."
+                        f"this occured on ln: {i} in the fasta file"
                     )
             elif i % 2 == 1:
                 if l.startswith(">"):
                     raise DREEMInputException(
-                            f"sequences should be on are on odd line numbers."
-                            f" line {i} has value which is not correct format in fasta file"
+                        f"sequences should be on are on odd line numbers."
+                        f" line {i} has value which is not correct format in fasta file"
                     )
                 if re.search(r"[^AGCT]", l):
                     raise DREEMInputException(
-                            f"reference sequences must contain only AGCT characters."
-                            f" line {i} is not consisetnt with this in fasta"
+                        f"reference sequences must contain only AGCT characters."
+                        f" line {i} is not consisetnt with this in fasta"
                     )
+
+    def generate_structure_constraints(self):
+        mhs = pickle.load(open("output/BitVector_Files/mutation_histos.p", "rb"))
+        for k, mh in mhs.items():
+            mus = []
+            for pos in range(mh.start, mh.end + 1):
+                mut_info = mh.mut_bases[pos] / mh.info_bases[pos]
+                mus.append(mut_info)
+            norm_bases = int(len(mus) / 10)
+            norm_value = med(
+                    np.sort(mus)[-1: -(norm_bases + 1): -1]
+            )  # Median of mus
+            norm_mus = np.array(mus) / norm_value  # Normalize the mus
+            norm_mus[norm_mus > 1.0] = 1.0  # Cap at 1
+            file_base_name = (
+                    "output/BitVector_Files/"
+                    + mh.name
+                    + "_"
+                    + str(mh.start)
+                    + "_"
+                    + str(mh.end)
+                    + "_"
+            )
+            struc_constraint_file = file_base_name + "struc_constraint.txt"
+            f = open(struc_constraint_file, "w")
+            for i in range(len(mus)):
+                mu = str(norm_mus[i])
+                if mh.sequence[i] == 'T' or mh.sequence[i] == 'G':
+                    mu = '-999'
+                f.write(str(i + 1) + '\t' + mu + '\n')
+            f.close()
 
     def job_running_daemon(self):
         while True:
@@ -218,6 +253,7 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                 path = FILE_DIR + "/output/BitVector_Files/"
                 if not os.path.isfile(path + "summary.csv"):
                     raise ValueError("DREEM did not run properly")
+                self.generate_structure_constraints()
                 self.zip_results()
                 shutil.move(path, new_path)
                 shutil.move(FILE_DIR + "/results.zip", new_path)
@@ -235,8 +271,6 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
                 errstring = ""
                 for l in str(e).split("\n"):
                     errstring += l.replace(MEDIA_DIR, "/datadir") + "<br>"
-                # if getattr(e, 'stderr', None) is not None:
-                #    errstring += f'\n------------\nSTDOUT:\n'
 
                 self.result_db.add_result(
                     j.id, j.type, json.dumps({"error": errstring})

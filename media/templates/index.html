@@ -29,7 +29,7 @@
 <div class="jumbotron">
     <h1>Welcome to the DREEM webserver</h1>
     <p>
-        DREEM is a computational tool to analyze chemical probing data from dimethyl sulfate mutational profiling with
+        DREEM is a set of computational tools to analyze chemical probing data from dimethyl sulfate mutational profiling with
         sequencing (DMS-MaPseq). The tool takes as input raw sequencing files and target RNA sequence and outputs the
         DMS reactivity per nucleotide, which is used to determine the RNA structure. This website is free and open to all
         users and there is no login requirement.
@@ -40,9 +40,10 @@
     </div>
 </div>
 <div class="bd-example">
-    <h2>Submit your DREEM job</h2>
+    <h2>Submit your mutational analysis profiling (MaP) job</h2>
     <p>
-        This server accepts a FASTA-formatted file containing the sequences of target RNAs as well as FASTQ-formatted files containing
+        This server generates the population average for MaP experiments.
+        The server accepts a FASTA-formatted file containing the sequences of target RNAs as well as FASTQ-formatted files containing
         the raw sequencing reads from an illumina-based sequencer.
         To limit how long it takes to run jobs, this webserver has a limit of 1000 reference sequences. We recommend ziping your fastq
         files if they are larger 50 Mb. If dealing with very large fastq files please consider <a href="https://github.com/jyesselm/dreem">
