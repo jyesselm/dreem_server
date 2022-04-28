@@ -170,8 +170,12 @@
         +<br>
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br>
-    </div>
-
+    </div><br>
+    <h3 id="normalization">How to normalize MaP results?</h3>
+    <p>If performing RT with the TGIRT or Marathon the background is low enough that no normalization is required. If
+        chemical probing is done with SSII/mn2+ then normalization may be required. We suggest running two seperate jobs. One
+        with the chemical modified data and one wiht a no-modification (nomod). With the data from both runs you can normalize
+        either by dividing or substracting out the nomod condition.</p>
 
     </div>
 {% endblock content %}
