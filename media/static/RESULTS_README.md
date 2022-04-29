@@ -67,6 +67,7 @@ The bitvectors.txt file contains a list of all the reads processed and what muta
 Query_name	Bit_vector	N_Mutations
 FS10000899:120:BPN80007-2212:1:1101:4450:1000	00000000000000000000000000000000000000000000000000T000000000000000000000000000000000000000000000000000000	1
 ```
+
 Each line contains a processed read and is tab-delimited. The first column is read name from the original fastq file. The second column contains the bitvectors. This string is the same length as the supplied reference sequence. A zero denotes no mutation at that position; a nucleotide letter represents a mutation; for example, a T means there was a mutation to a T at that position. Other possibilities are '?' which is ambiguous. The pair reads disagree, or the quality score is too low. '1' is a deletion, and. '' is missing data from the read. The last column is the number of mutations in the example; there is one mutation; thus, it reports 1.  
 
 The pop_avg.html file is the same plot shown on the webserver. Plots mutation fraction, or the number of mutations observed at a position divided by the total number of reads for this position. Coloring is A: red, C: blue, G: orange, T: green. 
@@ -74,6 +75,8 @@ The pop_avg.html file is the same plot shown on the webserver. Plots mutation fr
 The pop_avg.png file is the PNG version of the .html file. 
 
 The popavg_reacts.csv file contains data found in the plots in CSV format. The mismatches column considers only mismatch type mutations while mismatches_del considers both mismatches and deletions. 
+
+The struc_contraint.txt file is a secondary structure constraint file that can be used with the RNAStructure software (https://rna.urmc.rochester.edu/RNAstructure.html) to generate a secondary structure consistent with the chemical mapping data. See www.rnadreem.org/about.html for more information on how to do this.
 
 Checking for good data quality
 

@@ -46,7 +46,7 @@
         <p>
             DMS mutational profiling with sequencing (DMS-MaPseq), encodes DMS modifications as mismatches that get
             incorporated during reverse transcription by a thermostable group II intron reverse transcriptase (TGIRT).
-            Due to the high fidelity of TGITR, the background incorporation of mismatches is typically lower than
+            Due to the high fidelity of TGIRT, the background incorporation of mismatches is typically lower than
             sequencing error. Thus, the observed rate of a mismatch at a given nucleotide is directly
             proportional to its DMS reactivity. A big advantage of DMS-MaPseq is that any RNA of interest can be
             targeted
@@ -56,11 +56,11 @@
             <img style="margin-bottom: 1rem; width: 100%; max-width: 500px;" src="/static/tigrt_image.png">
         </div>
     </div>
-    <h2>About the DREEM analysis</h2>
+    <h2 id="analysis">About the MaP analysis</h2>
     <hr>
     <div style="padding-left:50px; padding-right:20px; padding-top:18px; line-height:18px;">
         <p>
-            The DREEM web tool provides a simple platform for analyzing DMS-reactivity of an RNA. The user input is a
+            The MaP analysis web tool provides a simple platform for analyzing DMS-reactivity of an RNA. The user input is a
             raw sequencing file (.fastq) generated from a DMS-MaPseq experiment,  and a sequence of the RNA of interest
             (.fasta). The DREEM algorithm performs sequence alignment using bowtie-2 and outputs the mismatch rate per
             nucleotide.<br><br>
@@ -114,10 +114,28 @@
         </p>
 
     </div>
+    <br>
+    <h2 id="ss_prediction">How to predict a secondary structure with MaP results?</h2>
+    <hr>
+    <div style="padding-left:50px; padding-right:20px; padding-top:18px; line-height:18px;">
+        <p>
+            Each job generates a structural constraint file for each sequence in the supplied fasta. These files end with
+            "_struc_constraint.txt". You can use the RNAStructure software package (https://rna.urmc.rochester.edu/RNAstructure.html)
+            to predict a secondary structure with a sequence and this file. if you have the software installed then run <br><br>
+            <code>Fold -m 3 test.fasta -dms test_struc_constraint.txt out.ct</code><br>
+            <code>ct2dot out.ct out.db</code><br><br>
+            Where <code>test.fasta</code> contains a single sequence of interest. <br>
+            <code> test_struc_constraint.txt</code> is the outputed structural constraint file<br><br>
+
+            You can also use their <a href="https://rna.urmc.rochester.edu/RNAstructureWeb/Servers/Predict1/Predict1.html">webserver</a><br>
+            Upload your fasta file containing a single sequence to the field "Select Sequence File:"<br>
+            Upload the constraint file generated in "Select SHAPE Constraints File:". This will work even if you have DMS<br>
+        </p>
+    </div>
     <h2>Who to contact</h2>
     <hr>
     <div style="padding-left:50px; padding-right:20px; padding-top:18px; line-height:18px;">
-        <p>Questions about DREEM and DMS-MaPseq please contact Silvi Rouskin (silvi@hms.harvard.edu) <br>
+        <p>Questions about DREEM, MaP analysis, and DMS-MaPseq please contact Silvi Rouskin (silvi@hms.harvard.edu) <br>
         Question about the server please contact Joseph Yesselman (jyesselm@unl.edu) </p>
     </div>
 

@@ -131,7 +131,16 @@
     </form>
     <hr>
     <h2>Frequently asked questions (FAQ)</h2>
-    <p>Answers for the most common questions</p>
+    <p><h5>Answers for the most common questions</h5></p>
+    <ul>
+        <li><a href="/about"><h5>What are MaP experiments?</h5></a></li>
+        <li><a href="/about#analysis"><h5>How is the analysis performed?</h5></a></li>
+        <li><a href="/about#ss_prediction"><h5>How to predict a secondary structure with MaP results?</h5></a></li>
+        <li><a href="#fasta_format"><h5>What is the expected FASTA file format?</h5></a></li>
+        <li><a href="#fastq_format"><h5>What is the expected FASTQ file format?</h5></a></li>
+        <li><a href="#normalization"><h5>How to normalize MaP results?</h5></a></li>
+    </ul>
+    <br>
     <h3 id="too-many-reads">Upload is slow for large FASTQ files</h3>
     <p>This webserver can accept zipped FASTQ files. Consider zip compressing your files before submitting them to reduce upload time.
     </p>
@@ -174,217 +183,67 @@
     <h3 id="normalization">How to normalize MaP results?</h3>
     <p>If performing RT with the TGIRT or Marathon the background is low enough that no normalization is required. If
         chemical probing is done with SSII/mn2+ then normalization may be required. We suggest running two seperate jobs. One
-        with the chemical modified data and one wiht a no-modification (nomod). With the data from both runs you can normalize
-        either by dividing or substracting out the nomod condition.</p>
-
+        with the chemical modified data and one with a no-modification (nomod). With the data from both runs you can normalize
+        either by dividing or substracting out the nomod condition. For more information please consult the following publications:
+        <a href="https://www.pnas.org/doi/10.1073/pnas.1807988115">(1)</a> and <a href="https://www.nature.com/articles/nmeth.3029">(2)</a>
+    </p>
     </div>
 {% endblock content %}
 
 {% block bodyend %}
 <script>
 
-
-  var seq = $('[name="sequence"]');
-  var struct = $('[name="structure"]');
   var fasta_file = $('[name="fasta_file"]');
+  var fasta_file_field = $('[name="fasta_file_field"]');
   var fastq1_file = $('[name="fastq1_file"]');
   var fastq2_file = $('[name="fastq2_file"]');
 
-  function checkLengthMatch(dotbracket, sequence) {
-    // We don't want to bother warning the user if they haven't filled the other one out yet - the `required` attr handles that
-    if (sequence == '' || dotbracket == '') return '';
-    if (sequence.length !== dotbracket.length) return 'Sequence and structure lengths must match';
-    return '';
-  }
-
-  function getPairs(dotBracket) {
-    var pairs = [];
-    var unpaired = [];
-    for (var i = 0; i < dotBracket.length; i++) {
-      switch (dotBracket[i]) {
-        case '.':
-          break;
-        case '(':
-          unpaired.push(i);
-          break;
-        case ')':
-          pairs.push([unpaired.pop(), i]);
-          break;
-      }
-    }
-    return pairs;
-  }
-
-  function isValidPair(baseA, baseB) {
-    var iupac = {
-      'A': ['A'],
-      'C': ['C'],
-      'G': ['G'],
-      'U': ['U'],
-      'W': ['A', 'U'],
-      'S': ['C', 'G'],
-      'M': ['A', 'C'],
-      'K': ['G', 'U'],
-      'R': ['A', 'G'],
-      'Y': ['C', 'U'],
-      'B': ['C', 'G', 'U'],
-      'D': ['A', 'G', 'U'],
-      'H': ['A', 'C', 'U'],
-      'V': ['A', 'C', 'G'],
-      'N': ['A', 'C', 'G', 'U']
-    }
-    var compliments = {
-      'A': 'U',
-      'C': 'G',
-      'G': 'Y',
-      'U': 'R',
-      'W': 'D',
-      'S': 'B',
-      'M': 'K',
-      'K': 'M',
-      'R': 'Y',
-      'Y': 'R',
-      'B': 'N',
-      'D': 'N',
-      'H': 'D',
-      'V': 'B',
-      'N': 'N'
-    }
-
-    // If all the bases of one symbol can match with one base of the other symbol
-    if (iupac[baseA].some(base => iupac[compliments[baseB]].includes(base))) return true;
-    else return false;
-  }
-
-  function checkStructureValid(dotbracket) {
-    var pairTally = 0;
-    var loopTally = 0;
-    var inPairOpening = true;
-    for (var char of dotbracket) {
-      switch (char) {
-        case '(':
-          pairTally += 1;
-          inPairOpening = true;
-          loopTally = 0;
-          break;
-        case ')':
-          pairTally -= 1;
-          if (inPairOpening && loopTally < 3) return 'Hairpin loops must be at least 3 bases long';
-          inPairOpening = false;
-          loopTally = 0;
-          break;
-        case '.':
-          loopTally += 1;
-          break;
-      }
-
-      if (pairTally < 0) return 'A ")" must not occur before having a matching "("';
-    }
-
-    if (pairTally > 0) return 'All "("s must have a matching ")"';
-    return '';
-  }
-
-  function checkValidPairs(dotBracket, sequence) {
-    var normalizedSequence = sequence.replace(/T/g, 'U');
-    // We can't validate this if the dot bracket is wrong - the validation for that field will handle that
-    if (checkStructureValid(dotBracket)) return '';
-    var pairs = getPairs(dotBracket);
-    for (var pair of pairs) {
-      var baseA = normalizedSequence[pair[0]];
-      var baseB = normalizedSequence[pair[1]];
-      if (!isValidPair(baseA, baseB)) return 'Invalid pair: ' + baseA + baseB;
-    }
-    return '';
-  }
-
-  function validateSeq() {
-    var dotBracket = struct.val();
-    var sequence = seq.val().toUpperCase() || 'N'.repeat(dotBracket.length);
-
-    seq[0].setCustomValidity(
-      checkLengthMatch(dotBracket, sequence) ||
-      checkValidPairs(dotBracket, sequence)
-    );
-  }
-
-  function validateStruct() {
-    var dotBracket = struct.val();
-    var sequence = seq.val().toUpperCase() || 'N'.repeat(dotBracket.length);
-
-    struct[0].setCustomValidity(
-      // NOTE: This is also validated on the backend. If the maximum changes, make sure to change it there too
-      dotBracket.length > 200 ?
-        'Please enter a a structure with 200 or less nucleotides' : '' ||
-        checkLengthMatch(dotBracket, sequence) ||
-        checkStructureValid(dotBracket)
-    );
-  }
-
-  fasta_file.on('change', function () {
+  fasta_file.on('input', function () {
     document.getElementById("fasta_file_field").value = fasta_file.val().substring(12);
+    this.setCustomValidity("");
     if (fasta_file[0].files.length === 0) {
       return;
     }
-    //var reader = new FileReader();
-
-    //alert(fasta_file[0].files[0].size);
+    var filename = fasta_file[0].files[0].name;
+    var format = /[ `!@#$%^&*(){}]+/;
+    if(format.test(filename)) {
+        this.setCustomValidity("filename must not contain symbols other than _ or -");
+        this.reportValidity();
+    }
   });
 
-  fastq1_file.on('change', function () {
+
+  fastq1_file.on('input', function () {
     document.getElementById("fastq1_file_field").value = fastq1_file.val().substring(12);
-    if (fasta_file[0].files.length === 0) {
+    this.setCustomValidity("");
+    if (fastq1_file[0].files.length === 0) {
       return;
+    }
+    var filename = fastq1_file[0].files[0].name;
+    var format = /[ `!@#$%^&*(){}]+/;
+    if(format.test(filename)) {
+        this.setCustomValidity("filename must not contain symbols other than _ or -");
+        this.reportValidity();
     }
     //alert(fasta_file[0].files[0].size);
   });
 
-  fastq2_file.on('change', function () {
+  fastq2_file.on('input', function () {
     document.getElementById("fastq2_file_field").value = fastq2_file.val().substring(12);
-    if (fasta_file[0].files.length === 0) {
+    this.setCustomValidity("");
+    if (fastq2_file[0].files.length === 0) {
       return;
+    }
+    var filename = fastq2_file[0].files[0].name;
+    var format = /[ `!@#$%^&*(){}]+/;
+    if(format.test(filename)) {
+        this.setCustomValidity("filename must not contain symbols other than _ or -");
+        this.reportValidity();
     }
     //alert(fasta_file[0].files[0].size);
   });
 
 
-  seq.on('input', function () {
-    // Run both in case changes in this field wind up impacting validity of the other field
-    // in cases where they rely on one another
-    validateSeq();
-    validateStruct();
-  });
 
-  struct.on('input', function () {
-    // Run both in case changes in this field wind up impacting validity of the other field
-    // in cases where they rely on one another
-    validateStruct();
-    validateSeq();
-  });
-
-  // Custom error messages for pattern mismatch
-  seq.on('invalid', function () {
-    if (this.validity.patternMismatch) {
-      this.setCustomValidity('Sequence must only contain IUPAC nucleic acid notation symbols (A, C, G, T, U, W, S, M, K, R, Y, B, D, H, V, and N)');
-    }
-  });
-
-  struct.on('invalid', function () {
-    if (this.validity.patternMismatch) {
-      if (struct.val().match(/[\[\]{}]/)) {
-        this.setCustomValidity('Pseudoknots are not supported');
-      } else this.setCustomValidity('Structure must be composed of the characters "(", ")", and "."');
-    }
-  });
-
-  // If the page has been reloaded, it may have kept old (invalid) values without retriggering custom validation
-  seq.trigger('input');
-  struct.trigger('input');
-
-  $('#fill-example').click(function () {
-    seq.val('NNNNAAAANNNN');
-    struct.val('((((....))))');
-    $('[name=nsolutions]').val(5);
-  });
 </script>
 {% endblock bodyend %}
