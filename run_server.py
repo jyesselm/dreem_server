@@ -12,6 +12,7 @@ import json
 import time
 import shutil
 import re
+import gzip
 from pathlib import Path
 from subprocess import CalledProcessError
 from zipfile import ZipFile
@@ -344,10 +345,31 @@ class App:
                 f"only contain a fastq file"
             )
         cherrypy.log(str(count) + " " + new_fname)
+        
+        args[fastq_name] = new_fname
+        cherrypy.log("right here: ------>>>>>"+str(args[fastq_name]))
+
+    def _is_gzip(self, filename):
+        tail=filename[len(filename)-2:]
+        foo = True if tail=="gz" else False
+        return foo
+    """opens gz file"""
+    def _process_gzip_file(self, path, args, fastq_name):
+        cherrypy.log(f"GZIP FILE FOUND: {args[fastq_name]}")
+        new_fname = ""
+        #opens with out-of-box python module gzip as text(decompressed) fileObj
+        with gzip.open(args[fastq_name], "r") as gzip_f:
+            gzip_lines = gzip_f.readlines()
+            #removes tailing .gz on name
+            new_fname = args[fastq_name][:len(args[fastq_name])-3]
+            with open(new_fname,"wb") as fq:
+                fq.writelines(gzip_lines)
+        cherrypy.log("here it is nice and shiny: " + new_fname)
         args[fastq_name] = new_fname
 
     @cherrypy.expose
     def request(self, fasta_file, fastq1_file, fastq2_file, email=None, name=None):
+        #creates random job id
         job_id = os.urandom(16).hex()
         path = os.path.join(MEDIA_DIR, "static", "job-data", job_id)
         os.mkdir(path)
@@ -379,6 +401,15 @@ class App:
             args["fastq2"]
         ):
             self._process_zip_file(path, args, "fastq2")
+        #cherrypy.log("here it is bright and early:       "+args["fastq1"])
+        #cherrypy.log(str(type(args["fastq1"])))
+        fq1=args["fastq1"]
+        fq2=args["fastq1"]
+        if self._is_gzip(fq1):
+            
+            self._process_gzip_file(path, args, "fastq1")
+        if self._is_gzip(fq2):
+            self._process_gzip_file(path, args, "fastq2")
 
         cherrypy.engine.publish(
             "queue_job",
