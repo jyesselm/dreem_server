@@ -401,12 +401,9 @@ class App:
             args["fastq2"]
         ):
             self._process_zip_file(path, args, "fastq2")
-        #cherrypy.log("here it is bright and early:       "+args["fastq1"])
-        #cherrypy.log(str(type(args["fastq1"])))
         fq1=args["fastq1"]
         fq2=args["fastq1"]
         if self._is_gzip(fq1):
-            
             self._process_gzip_file(path, args, "fastq1")
         if self._is_gzip(fq2):
             self._process_gzip_file(path, args, "fastq2")
