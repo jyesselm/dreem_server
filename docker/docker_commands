@@ -1,0 +1,2 @@
+docker build -t dreem_server -f docker/Dockerfile .
+docker run -d -i --name dreem_server dreem_server
