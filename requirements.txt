@@ -1,3 +1,6 @@
+scipy
+pyyaml
+enum
 cherrypy==18.8.0
 dreem==0.0.13
 Jinja2==3.1.2
