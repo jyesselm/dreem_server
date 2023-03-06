@@ -284,8 +284,8 @@ class JobRunner(cherrypy.process.plugins.SimplePlugin):
             except:
                 pass
 
-            if j.email:
-                email_client.send_email(j.email, j.id, j.name)
+            #if j.email:
+            #    email_client.send_email(j.email, j.id, j.name)
 
 
 class App:

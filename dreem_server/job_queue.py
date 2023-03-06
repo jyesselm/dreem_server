@@ -147,6 +147,7 @@ class JobQueue(object):
         )
         self.connection.commit()
 
+
     def get_queued(self):
         jobs = self.connection.execute("SELECT * FROM jobs WHERE status=0").fetchall()
         j_obs = []
@@ -165,6 +166,9 @@ class JobQueue(object):
 if __name__ == "__main__":
     queue = JobQueue()
     print(queue.has_queued_jobs())
+    print(len(queue.get_all()))
+    #print(queue.get_job('6bbf2ee23cd15f4be689907c611c5e8f'))
+    #queue.delete_job("6cdbaa839beae828c23e991788e9faa7")
     # queue.add_job("c32af6417fb183e71c662232091ce548", JobType.SCAFFOLD, json.dumps(args))
     # print queue.get_queue_position("c32af6417fb183e71c662232091ce548")
     # print queue.get_last_run_job_num()

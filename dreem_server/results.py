@@ -25,6 +25,8 @@ class Result(object):
         self.num = num
         self.plotly_strs = []
         print(self.data)
+        if id == '6bbf2ee23cd15f4be689907c611c5e8f':
+           self.data['error'] = 'please contact me at jyesselm@unl.edu, there are a couple things wrong that I can help you with'
         if self.data.get("summary") is None:
             return
         path = Path(self.data["summary"]).parent

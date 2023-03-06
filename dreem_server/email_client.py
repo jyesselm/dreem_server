@@ -7,7 +7,7 @@ from textwrap import dedent
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_USERNAME = "rnadreem.results@gmail.com"
-SMTP_PASSWORD = "Ppq7Jf6M$&YN"
+SMTP_PASSWORD = "jyphaW-gixbyd-sabgi2"
 
 EMAIL_FROM = "rnadreem.results@gmail.com"
 EMAIL_SUBJECT = "DREEM Job Finished : "
@@ -44,7 +44,7 @@ def send_email(user_email, job_id, job_name):
 
 
 def main():
-    # send_email('jyesselm@unl.edu', 'demo', 'demo')
+    send_email('jyesselm@unl.edu', 'demo', 'demo')
     pass
 
 
