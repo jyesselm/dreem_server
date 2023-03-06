@@ -1,0 +1,10 @@
+scipy
+pyyaml
+enum
+cherrypy==18.8.0
+dreem==0.0.13
+Jinja2==3.1.2
+numpy==1.24.1
+pandas==1.5.3
+# packages from github
+dreem @ git+https://github.com/jyesselm/dreem@main
